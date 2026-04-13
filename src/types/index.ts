@@ -1,11 +1,9 @@
 import { Icons } from '@/components/icons';
 
+export type UserRole = 'admin' | 'educator';
+
 export interface PermissionCheck {
-  permission?: string;
-  plan?: string;
-  feature?: string;
-  role?: string;
-  requireOrg?: boolean;
+  role?: UserRole;
 }
 
 export interface NavItem {

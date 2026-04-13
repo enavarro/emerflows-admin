@@ -13,12 +13,7 @@ const baseConfig: NextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'img.clerk.com',
-        port: ''
-      },
-      {
-        protocol: 'https',
-        hostname: 'clerk.com',
+        hostname: '*.supabase.co',
         port: ''
       }
     ]
