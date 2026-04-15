@@ -48,3 +48,8 @@ next-env.d.ts
 .env.sentry-build-plugin
 DEPLOYMENT_PLAN.md
 .claude/
+
+# Playwright
+test-results/
+playwright-report/
+playwright/.cache/
