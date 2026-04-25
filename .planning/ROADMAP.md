@@ -23,7 +23,7 @@ cohort → learner → submission → review.
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Foundations** - Nav entry, admin RBAC, feature scaffold, review-columns migration, server admin helper
+- [x] **Phase 1: Foundations** - Nav entry, admin RBAC, feature scaffold, review-columns migration, server admin helper *(completed 2026-04-25)*
 - [ ] **Phase 2: Cohorts Hub** - Cohorts list page and cohort detail with learner table + module progress matrix
 - [ ] **Phase 3: Learner Deep-Dive & Review** - Learner detail page, speaking + conversation submission viewers, mark-as-reviewed mutation
 - [ ] **Phase 4: Visual Fidelity & Verification** - Prototype-faithful structure, loading/error/empty states, icon-registry compliance, e2e smoke

@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Roadmap + state initialized; ready for `/gsd-plan-phase 1`
-last_updated: "2026-04-25T10:30:00.000Z"
-last_activity: 2026-04-25 -- Phase 01 all 5 plans executed; awaiting verification
+stopped_at: Phase 01 verified and complete (CR-01 fixed via migration 00011); ready for `/gsd-plan-phase 2`
+last_updated: "2026-04-25T11:30:00.000Z"
+last_activity: 2026-04-25 -- Phase 01 complete; CR-01 fixed; ready for Phase 02 planning
 progress:
   total_phases: 4
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 5
   completed_plans: 5
   percent: 25
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-25)
 
 **Core value:** An admin can open any learner's submission for any module and see everything the learner produced (audio, transcript, AI coaching) plus mark it reviewed — without leaving the dashboard or running SQL.
-**Current focus:** Phase 01 — foundations
+**Current focus:** Phase 02 — Cohorts Hub (next)
 
 ## Current Position
 
-Phase: 01 (foundations) — AWAITING VERIFICATION
+Phase: 01 (foundations) — COMPLETE; ready for Phase 02
 Plan: 5 of 5 complete
-Status: All Phase 01 plans executed; verifier pending
-Last activity: 2026-04-25 -- Phase 01 all 5 plans executed; awaiting verification
+Status: Phase 01 verified; CR-01 fixed via migration 00011 (column-level GRANTs)
+Last activity: 2026-04-25 -- Phase 01 complete; ready for Phase 02 planning
 
-Progress: [██▌░░░░░░░] 25%
+Progress: [██▌░░░░░░░] 25% (1 of 4 phases)
 
 ## Performance Metrics
 
@@ -76,7 +76,9 @@ None yet.
 
 ### Blockers/Concerns
 
-- Phase 1 schema migration (`reviewed_at`, `reviewed_by` on `public.submissions`) must land and be applied to live Supabase before Phase 3 review action can be implemented.
+- Phase 01 schema migrations (00010 + 00011) are LIVE on project `bohqhhpzsgmwsvqryhfw`. `reviewed_at` / `reviewed_by` columns exist; admin column-restricted UPDATE is enforced via column-level GRANT (parser-level rejection of non-review columns) + RLS USING(`is_admin()`). Phase 03 mark-as-reviewed mutation is unblocked.
+- Recommended manual visual verification (deferred under `--auto`): admin sees `Teach` in sidebar at `/dashboard`, educator does not, unauthenticated user redirected to `/auth/sign-in`.
+- Code review residual items (advisory, not blocking): WR-01 `MarkReviewedInput` should document `reviewed_by` must come from `auth.uid()` server-side (Phase 03 contract); MD-02 `cohorts/page.tsx` should use `PageContainer` (Phase 02 will replace this stub anyway); MD-* code-quality nits.
 
 ## Deferred Items
 
