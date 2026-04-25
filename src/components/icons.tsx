@@ -64,6 +64,7 @@ import {
   IconPlus,
   IconProps,
   IconRosetteDiscountCheck,
+  IconSchool,
   IconSearch,
   IconSelector,
   IconSend,
@@ -212,5 +213,6 @@ export const Icons = {
   slash: IconSlash,
   calendar: IconCalendar,
   galleryVerticalEnd: IconStack2,
-  moreHorizontal: IconDots
+  moreHorizontal: IconDots,
+  school: IconSchool
 };
