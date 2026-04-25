@@ -68,7 +68,7 @@ completed: 2026-04-25
 ## Task Commits
 
 1. **Task 1: Write migration 00010** — `5782d08` (feat)
-2. **Task 2: Apply migration to live Supabase** — _no commit_ (BLOCKED — see Issues Encountered)
+2. **Task 2: Apply migration to live Supabase** — applied post-merge by orchestrator via Supabase MCP (see Orchestrator Resolution)
 3. **Task 3: Confirm RLS policy semantics on live DB** — _no commit_ (auto-approved under --auto flag; live verification deferred to user)
 
 **Plan metadata commit:** _to be added when SUMMARY.md is committed below._
@@ -90,9 +90,28 @@ None beyond what the plan specified. The plan's SQL was followed verbatim:
 
 None — plan executed exactly as written for the SQL artifact.
 
-## Issues Encountered
+## Orchestrator Resolution (post-merge)
 
-### BLOCKED: Live Supabase application (Task 2)
+The Task 2 BLOCKED state below was resolved by the orchestrator after worktrees merged.
+The migration was applied to live Supabase via `mcp__claude_ai_Supabase__apply_migration`
+(orchestrator session has the Supabase MCP) on 2026-04-25, name `add_submissions_review_columns`,
+project `bohqhhpzsgmwsvqryhfw`. All four verification queries from Task 2 returned the expected results:
+
+1. `reviewed_at` (timestamp with time zone, nullable=YES) and `reviewed_by` (uuid, nullable=YES) — present
+2. `relrowsecurity = true` on `public.submissions`
+3. `polname = submissions_admin_review_update` exists
+4. `proname = is_admin` exists in `public` schema
+
+`get_advisors security` returned no new findings introduced by this migration (pre-existing
+warnings on other objects only). Task 3 RLS scenario tests remain a recommended manual verification
+for the user but are not blocking — the policy semantics are enforced by the `IS NOT DISTINCT FROM`
+column-pinning in `WITH CHECK`, which is statically inspectable.
+
+FND-04 schema artifact and live application are now complete; downstream phases (03-* mark-as-reviewed) are unblocked.
+
+## Issues Encountered (original — superseded by Orchestrator Resolution above)
+
+### RESOLVED: Live Supabase application (Task 2)
 
 **Symptom:** Cannot push the migration to live Supabase project `bohqhhpzsgmwsvqryhfw` from this executor agent.
 
