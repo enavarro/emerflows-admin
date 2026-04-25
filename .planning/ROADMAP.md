@@ -41,9 +41,9 @@ Decimal phases appear between their surrounding integers in numeric order.
   4. `public.submissions` has `reviewed_at timestamptz` and `reviewed_by uuid` columns (FK to `auth.users.id`, nullable) with an RLS policy/RPC that lets admins update only those two columns; verified via psql/Supabase SQL editor.
   5. A server-only Supabase admin helper exists in `src/lib/supabase/` (or feature `api/`) and is importable in route handlers / server components without leaking the service-role key to the client bundle.
 **Plans**: 5 plans
-- [ ] 01-01-PLAN.md (Wave 1) — Migration 00010: add `submissions.reviewed_at` + `reviewed_by` columns and admin-only RLS policy [FND-04]
-- [ ] 01-02-PLAN.md (Wave 1) — Server-only Supabase admin helper with signed-URL utility (TTL ≤ 300s) [FND-05]
-- [ ] 01-03-PLAN.md (Wave 1) — `src/features/teach/` scaffold: types, service stubs, queries with key factory, 12-module catalog [FND-03]
+- [x] 01-01-PLAN.md (Wave 1) — Migration 00010: add `submissions.reviewed_at` + `reviewed_by` columns and admin-only RLS policy [FND-04]
+- [x] 01-02-PLAN.md (Wave 1) — Server-only Supabase admin helper with signed-URL utility (TTL ≤ 300s) [FND-05]
+- [x] 01-03-PLAN.md (Wave 1) — `src/features/teach/` scaffold: types, service stubs, queries with key factory, 12-module catalog [FND-03]
 - [ ] 01-04-PLAN.md (Wave 2) — Server-side `requireAdmin()` helper + `/dashboard/teach/*` segment layout that gates non-admins [FND-02]
 - [ ] 01-05-PLAN.md (Wave 3) — Sidebar `Teach` entry linking to `/dashboard/teach/cohorts` with admin-only access guard [FND-01]
 **UI hint**: yes
