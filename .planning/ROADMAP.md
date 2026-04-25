@@ -44,7 +44,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] 01-01-PLAN.md (Wave 1) — Migration 00010: add `submissions.reviewed_at` + `reviewed_by` columns and admin-only RLS policy [FND-04]
 - [x] 01-02-PLAN.md (Wave 1) — Server-only Supabase admin helper with signed-URL utility (TTL ≤ 300s) [FND-05]
 - [x] 01-03-PLAN.md (Wave 1) — `src/features/teach/` scaffold: types, service stubs, queries with key factory, 12-module catalog [FND-03]
-- [ ] 01-04-PLAN.md (Wave 2) — Server-side `requireAdmin()` helper + `/dashboard/teach/*` segment layout that gates non-admins [FND-02]
+- [x] 01-04-PLAN.md (Wave 2) — Server-side `requireAdmin()` helper + `/dashboard/teach/*` segment layout that gates non-admins [FND-02]
 - [ ] 01-05-PLAN.md (Wave 3) — Sidebar `Teach` entry linking to `/dashboard/teach/cohorts` with admin-only access guard [FND-01]
 **UI hint**: yes
 
