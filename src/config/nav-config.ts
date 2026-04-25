@@ -39,6 +39,20 @@ export const navGroups: NavGroup[] = [
     ]
   },
   {
+    label: 'Teach',
+    items: [
+      {
+        title: 'Cohorts',
+        url: '/dashboard/teach/cohorts',
+        icon: 'school',
+        shortcut: ['t', 'c'],
+        isActive: false,
+        access: { role: 'admin' },
+        items: []
+      }
+    ]
+  },
+  {
     label: 'Elements',
     items: [
       {
