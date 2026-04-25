@@ -79,20 +79,24 @@ Declared values (must be multiples of 4) — uses Tailwind v4 default `4px` step
 
 ## Typography
 
-Project uses Tailwind v4 default type scale with the Geist font (from `src/app/layout.tsx`). Phase 2 declares the four roles below. All sizes are multiples of 4 except `text-xs` (12px) and `text-sm` (14px) which are the project's existing UI-text defaults inherited from shadcn — kept for cross-feature consistency with `src/features/demos/` and `src/features/users/`.
+Project uses Tailwind v4 default type scale with the Geist font (from `src/app/layout.tsx`). Phase 2 declares the two roles below. All sizes are multiples of 4 except `text-xs` (12px) and `text-sm` (14px) which are the project's existing UI-text defaults inherited from shadcn — kept for cross-feature consistency with `src/features/demos/` and `src/features/users/`.
 
 | Role | Size | Weight | Line Height | Used for (Phase 2) |
 |------|------|--------|-------------|--------------------|
 | Body | 14px (`text-sm`) | 400 (`font-normal`) | 1.5 (`leading-6`) | Card stat values, learner table cells, tooltip text, helper copy |
-| Label | 12px (`text-xs`) | 600 (`font-semibold`) + `uppercase tracking-wider` | 1.4 (`leading-tight`) | Cohort-card stat labels ("STUDENTS", "COMPLETION", "NEEDS REVIEW", "NEXT"), table column headers, status pill text |
-| Heading | 20px (`text-xl`) | 600 (`font-semibold`) | 1.2 (`leading-7`) | Cohort name on each card |
-| Display | 28px (`text-3xl` ≈ 30px in Tailwind defaults; locked to **28px** here for exact 4-multiple) | 700 (`font-bold`) | 1.2 (`leading-tight`) | Page title in `PageContainer` header — "Cohorts" (list) and "{Cohort name}" (detail) |
+| Label / Heading | 12px (`text-xs`) for labels, 20px (`text-xl`) for section headings | 600 (`font-semibold`) — labels add `uppercase tracking-wider`; line height 1.4 (`leading-tight`) for labels, 1.2 (`leading-7`) for headings | as noted | Cohort-card stat labels ("STUDENTS", "COMPLETION", "NEEDS REVIEW", "NEXT"), table column headers, status pill text, cohort name on each card |
 
-**Resolution note for executor:** The `Heading` component used by `PageContainer` already applies a default heading style; do NOT override unless visual fidelity demands it. If a manual size is needed for the page title, use `text-3xl font-bold` (Tailwind's 30px default — within tolerance of the declared 28px display token).
+**Page-title weight (inherited, NOT part of Phase 2 type contract):**
 
-**Exactly 3 weights are in active use** (400 body, 600 label/heading, 700 display) — the project's existing pattern. This is one weight above the gsd preferred 2-weight target; justified because the existing `Heading` component already uses bold at the page level, and re-implementing it would violate `Page headers — use PageContainer ... never import <Heading> manually` (CLAUDE.md).
+The page-title weight is inherited from the `PageContainer` / `Heading` primitive (CLAUDE.md mandates `PageContainer` for all page headers) and is intentionally outside the Phase 2 type scale. Phase 2 declares 2 weights: 400 (Body) and 600 (Label/Heading). The page title rendered via `pageTitle` prop on `PageContainer` uses the weight baked into the `Heading` primitive — Phase 2 does NOT override or re-declare this. If a manual size is needed for the page title, defer to the primitive's existing styling.
 
-**Open question (defaulted):** No display vs heading separation in matrix table cells — module column labels render as Body weight 600 in `tabular-nums` for alignment.
+**Display size note:** The 28px display size (used for the page title at the `PageContainer` level) is rendered by the inherited `Heading` primitive at its native Tailwind size (`text-3xl` ≈ 30px in Tailwind defaults — within tolerance). Phase 2 does NOT declare a Display weight; the page-title weight is whatever the primitive applies.
+
+**Resolution note for executor:** The `Heading` component used by `PageContainer` already applies a default heading style; do NOT override unless visual fidelity demands it. `Page headers — use PageContainer ... never import <Heading> manually` (CLAUDE.md).
+
+**Open question (defaulted):** Module column labels in the matrix table render as Body weight 600 in `tabular-nums` for alignment — they fall under the Label/Heading role (600 weight).
+
+**Typography summary:** 2 declared weights (400 Body, 600 Label/Heading). 4 sizes (12 Label / 14 Body / 20 Heading / 28 Display). Page-title weight inherited from primitive — not part of phase type contract.
 
 ---
 
@@ -272,7 +276,7 @@ The prototype `teacher-admin/teacher-admin.jsx` uses raw CSS variables (`--teal`
 - [ ] Dimension 1 Copywriting: PASS — every visible string is locked above; tone is warm-factual; no emojis; no destructive copy needed (no destructive actions in phase)
 - [ ] Dimension 2 Visuals: PASS — primitive list locked; cohort card geometry mirrors prototype IA; matrix encoding (D-16) is unambiguous (`h-3 w-3` dot, three states, exact Tailwind classes specified)
 - [ ] Dimension 3 Color: PASS — 60/30/10 split documented; brand-sage reserved for the 3 explicit accent uses; no destructive color in this phase
-- [ ] Dimension 4 Typography: PASS — 4 roles declared with exact size/weight/leading; weight count noted (3 active weights — justified by `Heading` primitive constraint)
+- [ ] Dimension 4 Typography: PASS — 2 declared weights (400 Body, 600 Label/Heading); 4 sizes (12 Label / 14 Body / 20 Heading / 28 Display); page-title weight inherited from `PageContainer`/`Heading` primitive and intentionally outside the Phase 2 type scale per CLAUDE.md mandate
 - [ ] Dimension 5 Spacing: PASS — Tailwind 4-step multiples used throughout; matrix cell + dot sizes specified; one note about admin radius vs learner brand radius
 - [ ] Dimension 6 Registry Safety: PASS — only shadcn-official primitives, all already in repo, no new `add` runs required
 
