@@ -1,10 +1,11 @@
 ---
 phase: 2
 slug: cohorts-hub
-status: draft
+status: approved
 shadcn_initialized: true
 preset: detected (style=new-york, baseColor=zinc, iconLibrary=radix in components.json) — overridden by project brand tokens (brand-teal/sage/beige/cream) per CLAUDE.md
 created: 2026-04-25
+reviewed_at: 2026-04-25
 ---
 
 # Phase 2 — UI Design Contract: Cohorts Hub
