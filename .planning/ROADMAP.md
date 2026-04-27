@@ -105,6 +105,39 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 
 ## Backlog
 
+### Phase 999.2: Learner level computation feature (BACKLOG)
+
+**Goal:** Compute and persist `learners.level` (e.g., CEFR A1..C2) automatically from learner submissions. Today the schema has no `level` column, so the cohort-detail learners table renders `—` in every row. Surfaced during Phase 2 UAT — user wants level computed by a periodic/triggered process rather than manually entered.
+
+**Why this matters:**
+- Phase 2 UI already has a `Level` column locked (`learners-table.tsx:46`); making it data-driven closes the visual gap and prevents teachers from interpreting a placeholder as missing data.
+- Phase 3 learner detail surfaces `learner.level` per requirement LRN-01; needs a value to display.
+- Auto-computation removes admin toil and keeps level current as learners progress.
+
+**Open questions to resolve in /gsd-discuss-phase:**
+- **Scoring rubric:** Which submission signals feed the level? Conversational fluency score, exercise accuracy, vocabulary range, error density? Average vs latest vs trend?
+- **CEFR mapping:** What thresholds map a score to A1/A2/B1/B2/C1/C2? Do we need linguist input or can we derive from existing AI-coaching tip categories?
+- **Trigger model (user suggested two options):**
+  - (a) Cron job on a fixed cadence (e.g., weekly Sunday 02:00 UTC) — simple, predictable, cheap.
+  - (b) Event-triggered: re-compute when a learner submits N (≥2?) new submissions since last computation — fresher levels, more compute, needs idempotency.
+  - Hybrid: event-triggered with a max-staleness backstop cron.
+- **Scope of recompute:** Always recompute from full history vs incremental update keyed on `last_level_computed_at`?
+- **Storage:** New column `learners.level` (text or enum), plus `learners.level_computed_at` and `learners.level_source` (audit trail).
+- **Manual override:** Admins may want to override the computed level (e.g., placement test). Should the column hold the override and computation populate a separate `level_computed` field?
+
+**Implementation skeleton:**
+- (a) Migration: `ALTER TABLE learners ADD COLUMN level text NULL, ADD COLUMN level_computed_at timestamptz NULL, ADD COLUMN level_source text NULL CHECK (level_source IN ('computed','manual'))`
+- (b) Edge function `compute-learner-level` (Supabase): pulls a learner's submissions, runs scoring rubric, writes back. Idempotent.
+- (c) Trigger: choose (a)/(b)/hybrid above. If cron — Supabase pg_cron or external scheduler. If event — DB trigger that enqueues a job, processed async.
+- (d) Update `service.ts:getCohort()` and Phase 3 `getLearner()` to surface `level` from the column (already shape-compatible).
+- (e) Optional: admin override UI in Phase 4+ to set `level_source='manual'`.
+
+**Requirements:** TBD (LRN-01 depends on it being filled when present)
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (promote with /gsd-review-backlog when ready)
+
 ### Phase 999.1: Schema — denormalized `submissions.cohort` column with FK + backfill (BACKLOG)
 
 **Goal:** Add a denormalized `cohort` column to `public.submissions` so cohort-scoped queries don't have to two-trip through `learners`. Surfaced during Phase 2 UAT — user explicitly requested this for future implementations to avoid coupling all cohort lookups through learner aggregation.
