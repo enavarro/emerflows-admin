@@ -60,9 +60,9 @@ Decimal phases appear between their surrounding integers in numeric order.
   5. Cohort-card and cohort-detail UI uses only `src/components/ui/*` primitives and brand tokens — no raw prototype CSS classes — and visually echoes the `teacher-admin/` prototype's structure.
 **Plans**: 5 plans
 - [x] 02-01-PLAN.md (Wave 1) — Replace getCohorts/getCohort service stubs with real Supabase queries (D-01..D-05) [COD-03]
-- [ ] 02-02-PLAN.md (Wave 2) — Cohorts list page + cohort card + error.tsx (D-06..D-12, COH-01..03) [COH-01, COH-02, COH-03]
-- [ ] 02-03-PLAN.md (Wave 2) — Cohort detail dynamic route + tabs wrapper + learners table (D-13, D-14, COD-01, COD-04) [COD-01, COD-04]
-- [ ] 02-04-PLAN.md (Wave 2) — Progress matrix client component with sticky-header + sage-progressive dots + tooltips (D-15..D-19) [COD-02, COD-03]
+- [x] 02-02-PLAN.md (Wave 2) — Cohorts list page + cohort card + error.tsx (D-06..D-12, COH-01..03) [COH-01, COH-02, COH-03]
+- [x] 02-03-PLAN.md (Wave 2) — Cohort detail dynamic route + tabs wrapper + learners table (D-13, D-14, COD-01, COD-04) [COD-01, COD-04]
+- [x] 02-04-PLAN.md (Wave 2) — Progress matrix client component with sticky-header + sage-progressive dots + tooltips (D-15..D-19) [COD-02, COD-03]
 - [ ] 02-05-PLAN.md (Wave 3) — Playwright happy-path e2e covering both routes + matrix render
 **UI hint**: yes
 
