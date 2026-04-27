@@ -2,7 +2,6 @@
 
 import { format } from 'date-fns';
 
-import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import {
   Table,
   TableBody,
@@ -51,86 +50,93 @@ export function ProgressMatrix({ cohortDetail }: ProgressMatrixProps) {
     );
   }
 
+  // WR-04: scroll container is a plain `overflow-auto` div instead of
+  // Radix `<ScrollArea>`. Sticky positioning relies on the nearest
+  // scrolling ancestor — Radix ScrollArea wraps the scrolling element in
+  // an inner Viewport whose overflow strategy has changed across shadcn
+  // upgrades, occasionally breaking sticky positioning silently. A plain
+  // `relative w-full overflow-auto` wrapper guarantees the table's
+  // natural sticky behavior survives radix/shadcn upgrades. The first
+  // header cell stays at z-30 (sits above sticky-row first cells AND
+  // sticky-top header cells); module headers stay at z-20; sticky-row
+  // first cells stay at z-10.
   return (
     <div className='flex flex-col gap-4'>
-      <div className='rounded-md border bg-card'>
-        <ScrollArea className='w-full'>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead
-                  className='sticky left-0 top-0 z-30 min-w-[200px] bg-card text-brand-teal'
-                  scope='col'
-                >
-                  Learner
-                </TableHead>
-                {MODULES.map((mod) => {
-                  const code = `M${String(mod.num).padStart(2, '0')}`;
-                  return (
-                    <TableHead
-                      key={mod.id}
-                      className='sticky top-0 z-20 h-10 w-12 bg-card text-center text-brand-teal'
-                      scope='col'
-                      aria-label={`Module ${mod.num} — ${mod.title}`}
-                    >
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <span className='inline-block text-xs font-semibold uppercase tabular-nums tracking-wider'>
-                            {code}
-                          </span>
-                        </TooltipTrigger>
-                        <TooltipContent>{mod.title}</TooltipContent>
-                      </Tooltip>
-                    </TableHead>
-                  );
-                })}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {learners.map((learner) => {
-                const cells = cohortDetail.matrix[learner.id] ?? [];
+      <div className='bg-card relative w-full overflow-auto rounded-md border'>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead
+                className='bg-card text-brand-teal sticky left-0 top-0 z-30 min-w-[200px]'
+                scope='col'
+              >
+                Learner
+              </TableHead>
+              {MODULES.map((mod) => {
+                const code = `M${String(mod.num).padStart(2, '0')}`;
                 return (
-                  <TableRow key={learner.id}>
-                    <TableCell
-                      className='sticky left-0 z-10 min-w-[200px] bg-card font-medium text-brand-teal'
-                      scope='row'
-                    >
-                      {learner.name}
-                    </TableCell>
-                    {MODULES.map((mod, colIdx) => {
-                      const cell = cells[colIdx] ?? fallbackCell(mod.id);
-                      const tooltipText = formatCellTooltip(cell);
-                      const ariaLabel = `${learner.name} — Module ${mod.num} — ${tooltipText}`;
-                      return (
-                        <TableCell
-                          key={`${learner.id}-${mod.id}`}
-                          className='h-8 w-12 text-center'
-                        >
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              {/* Layout wrapper centers the dot inside the cell.
-                                  The dot's own className is VERBATIM from UI-SPEC
-                                  (no layout utilities). */}
-                              <span
-                                className='flex items-center justify-center'
-                                aria-label={ariaLabel}
-                                role='img'
-                              >
-                                <span className={DOT_CLASSES[cell.state]} aria-hidden='true' />
-                              </span>
-                            </TooltipTrigger>
-                            <TooltipContent>{tooltipText}</TooltipContent>
-                          </Tooltip>
-                        </TableCell>
-                      );
-                    })}
-                  </TableRow>
+                  <TableHead
+                    key={mod.id}
+                    className='bg-card text-brand-teal sticky top-0 z-20 h-10 w-12 text-center'
+                    scope='col'
+                    aria-label={`Module ${mod.num} — ${mod.title}`}
+                  >
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className='inline-block text-xs font-semibold uppercase tabular-nums tracking-wider'>
+                          {code}
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent>{mod.title}</TooltipContent>
+                    </Tooltip>
+                  </TableHead>
                 );
               })}
-            </TableBody>
-          </Table>
-          <ScrollBar orientation='horizontal' />
-        </ScrollArea>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {learners.map((learner) => {
+              const cells = cohortDetail.matrix[learner.id] ?? [];
+              return (
+                <TableRow key={learner.id}>
+                  <TableCell
+                    className='bg-card text-brand-teal sticky left-0 z-10 min-w-[200px] font-medium'
+                    scope='row'
+                  >
+                    {learner.name}
+                  </TableCell>
+                  {MODULES.map((mod, colIdx) => {
+                    const cell = cells[colIdx] ?? fallbackCell(mod.id);
+                    const tooltipText = formatCellTooltip(cell);
+                    const ariaLabel = `${learner.name} — Module ${mod.num} — ${tooltipText}`;
+                    return (
+                      <TableCell
+                        key={`${learner.id}-${mod.id}`}
+                        className='h-8 w-12 text-center'
+                      >
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            {/* Layout wrapper centers the dot inside the cell.
+                                The dot's own className is VERBATIM from UI-SPEC
+                                (no layout utilities). */}
+                            <span
+                              className='flex items-center justify-center'
+                              aria-label={ariaLabel}
+                              role='img'
+                            >
+                              <span className={DOT_CLASSES[cell.state]} aria-hidden='true' />
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent>{tooltipText}</TooltipContent>
+                        </Tooltip>
+                      </TableCell>
+                    );
+                  })}
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
       </div>
 
       {/* Locked legend (UI-SPEC §Copywriting Contract: Matrix legend) */}
