@@ -47,6 +47,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         />
       </head>
       <body
+        suppressHydrationWarning
         className={cn(
           'bg-background overflow-x-hidden overscroll-none font-sans antialiased',
           fontVariables
