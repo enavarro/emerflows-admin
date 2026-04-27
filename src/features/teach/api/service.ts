@@ -89,7 +89,7 @@ export async function getCohorts(): Promise<Cohort[]> {
   }
 
   // Compose Cohort[] in stable order (alphabetical by id).
-  const cohortIds = Array.from(learnersByCohort.keys()).sort();
+  const cohortIds = Array.from(learnersByCohort.keys()).toSorted();
   return cohortIds.map((id) => ({
     id,
     name: humanizeCohortId(id),
