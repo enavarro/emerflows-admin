@@ -28,8 +28,10 @@ export default async function CohortDetailPage({ params }: CohortDetailPageProps
   // Server-side prefetch: queries.ts intentionally does NOT import the
   // server-only service (CR-01) so client bundles stay clean. The route
   // wires queryFn -> getCohort() here, in RSC, where server-only is fine.
+  // MUST await — queries.ts has a throwing placeholder queryFn (CR-01),
+  // so the client crashes if hydration doesn't include resolved data.
   const queryClient = getQueryClient();
-  void queryClient.prefetchQuery({
+  await queryClient.prefetchQuery({
     queryKey: teachKeys.cohort(cohortId),
     queryFn: () => getCohort(cohortId)
   });
