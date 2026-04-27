@@ -11,7 +11,7 @@ import {
   TableHeader,
   TableRow
 } from '@/components/ui/table';
-import type { CohortDetail, LearnerRow } from '@/features/teach/api/types';
+import type { CohortDetail } from '@/features/teach/api/types';
 
 interface LearnersTableProps {
   cohortDetail: CohortDetail;
@@ -30,6 +30,13 @@ export function LearnersTable({ cohortDetail }: LearnersTableProps) {
     );
   }
 
+  // WR-02: render exactly one <Link> per row using the stretched-link
+  // pattern. The visible <Link> sits on the name cell and its
+  // `after:absolute after:inset-0` pseudo-element expands the click target
+  // to the entire row. The row gets `position: relative` so the
+  // pseudo-element anchors to it, and remaining cells stay plain text —
+  // no duplicate anchors, no `aria-hidden` link clones, single keyboard
+  // stop per row.
   return (
     <div className='bg-card rounded-md border'>
       <Table>
@@ -42,49 +49,33 @@ export function LearnersTable({ cohortDetail }: LearnersTableProps) {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {learners.map((learner) => (
-            <LearnerLinkRow key={learner.id} cohortId={cohortId} learner={learner} />
-          ))}
+          {learners.map((learner) => {
+            const href = `/dashboard/teach/cohorts/${cohortId}/learners/${learner.id}`;
+            return (
+              <TableRow
+                key={learner.id}
+                className='hover:bg-brand-cream relative cursor-pointer transition'
+              >
+                <TableCell className='text-brand-teal font-medium'>
+                  <Link
+                    href={href}
+                    aria-label={`Open ${learner.name}`}
+                    className='focus-visible:ring-brand-teal after:absolute after:inset-0 focus:outline-none focus-visible:ring-2'
+                  >
+                    {learner.name}
+                  </Link>
+                </TableCell>
+                <TableCell>{learner.level ?? '—'}</TableCell>
+                <TableCell className='text-right tabular-nums'>
+                  {learner.submissionCount}
+                </TableCell>
+                <TableCell>{formatLatestActivity(learner.latestActivityAt)}</TableCell>
+              </TableRow>
+            );
+          })}
         </TableBody>
       </Table>
     </div>
-  );
-}
-
-interface LearnerLinkRowProps {
-  cohortId: string;
-  learner: LearnerRow;
-}
-
-function LearnerLinkRow({ cohortId, learner }: LearnerLinkRowProps) {
-  const href = `/dashboard/teach/cohorts/${cohortId}/learners/${learner.id}`;
-  return (
-    <TableRow className='hover:bg-brand-cream cursor-pointer transition'>
-      <TableCell className='text-brand-teal font-medium'>
-        <Link
-          href={href}
-          aria-label={`Open ${learner.name}`}
-          className='focus-visible:ring-brand-teal block focus:outline-none focus-visible:ring-2'
-        >
-          {learner.name}
-        </Link>
-      </TableCell>
-      <TableCell>
-        <Link href={href} tabIndex={-1} aria-hidden='true' className='block'>
-          {learner.level ?? '—'}
-        </Link>
-      </TableCell>
-      <TableCell className='text-right tabular-nums'>
-        <Link href={href} tabIndex={-1} aria-hidden='true' className='block'>
-          {learner.submissionCount}
-        </Link>
-      </TableCell>
-      <TableCell>
-        <Link href={href} tabIndex={-1} aria-hidden='true' className='block'>
-          {formatLatestActivity(learner.latestActivityAt)}
-        </Link>
-      </TableCell>
-    </TableRow>
   );
 }
 
