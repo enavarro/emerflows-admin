@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Session resumed — Phase 02 PLANs ready, awaiting execution decision
-last_updated: "2026-04-27T09:28:59.959Z"
-last_activity: 2026-04-27 -- Phase 02 planning complete
+stopped_at: Completed 02-01-PLAN.md (getCohorts + getCohort real Supabase queries)
+last_updated: "2026-04-27T10:00:22.358Z"
+last_activity: 2026-04-27
 progress:
   total_phases: 4
   completed_phases: 1
   total_plans: 10
-  completed_plans: 5
-  percent: 50
+  completed_plans: 6
+  percent: 60
 ---
 
 # Project State
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-25)
 
 **Core value:** An admin can open any learner's submission for any module and see everything the learner produced (audio, transcript, AI coaching) plus mark it reviewed — without leaving the dashboard or running SQL.
-**Current focus:** Phase 02 — Cohorts Hub (next)
+**Current focus:** Phase 02 — cohorts-hub
 
 ## Current Position
 
-Phase: 01 (foundations) — COMPLETE; ready for Phase 02
-Plan: 5 of 5 complete
+Phase: 02 (cohorts-hub) — EXECUTING
+Plan: 2 of 5
 Status: Ready to execute
-Last activity: 2026-04-27 -- Phase 02 planning complete
+Last activity: 2026-04-27
 
 Progress: [██▌░░░░░░░] 25% (1 of 4 phases)
 
@@ -55,6 +55,7 @@ Progress: [██▌░░░░░░░] 25% (1 of 4 phases)
 - Trend: -
 
 *Updated after each plan completion*
+| Phase 02-cohorts-hub P01 | 4min | 2 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -69,6 +70,7 @@ Recent decisions affecting current work:
 - Reuse existing shadcn/ui primitives; preserve prototype IA, do not port prototype CSS
 - AI generation is upstream — Teach Admin is purely a viewer over `submissions.payload`
 - Audio playback via short-TTL signed URLs from private `recordings` bucket
+- [Phase 02-cohorts-hub]: Plan 02-01: implemented two-trip aggregate (D-01) for getCohorts, latest-wins matrix (D-05) for getCohort, with humanizeCohortId() placeholder for D-08 cohort name
 
 ### Pending Todos
 
@@ -88,6 +90,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-27 (resumed)
-Stopped at: Session resumed — Phase 02 PLANs ready, awaiting execution decision
-Resume file: .planning/phases/02-cohorts-hub/02-UI-SPEC.md
+Last session: 2026-04-27T10:00:22.356Z
+Stopped at: Completed 02-01-PLAN.md (getCohorts + getCohort real Supabase queries)
+Resume file: None

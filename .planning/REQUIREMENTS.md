@@ -23,7 +23,7 @@
 
 - [ ] **COD-01**: Admin opens `/dashboard/teach/cohorts/[cohort]` and sees a learners table with name, level (if available), submission count, latest activity timestamp
 - [ ] **COD-02**: Cohort detail includes a learner × module progress matrix indicating per-cell state: not-started / submitted / reviewed (derived from `submissions.status` + `reviewed_at`)
-- [ ] **COD-03**: Module catalog used by the matrix is a typed constant on the client/server (12 modules with `id`, `num`, `title`, supported `types`) matching the prototype's `MODULES` list
+- [x] **COD-03**: Module catalog used by the matrix is a typed constant on the client/server (12 modules with `id`, `num`, `title`, supported `types`) matching the prototype's `MODULES` list
 - [ ] **COD-04**: Each learner row links to that learner's detail page
 
 ### Learner Detail
@@ -122,7 +122,7 @@ Deferred to future milestones; tracked but not in current roadmap.
 | COH-03 | Phase 2 | Pending |
 | COD-01 | Phase 2 | Pending |
 | COD-02 | Phase 2 | Pending |
-| COD-03 | Phase 2 | Pending |
+| COD-03 | Phase 2 | Complete |
 | COD-04 | Phase 2 | Pending |
 | LRN-01 | Phase 3 | Pending |
 | LRN-02 | Phase 3 | Pending |
