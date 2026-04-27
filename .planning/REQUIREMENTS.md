@@ -15,16 +15,16 @@
 
 ### Cohorts
 
-- [ ] **COH-01**: Admin sees a cohorts list page at `/dashboard/teach/cohorts` with one card per distinct `learners.cohort` value, showing learner count and aggregate submission counts (total / needs-review / reviewed)
-- [ ] **COH-02**: Cohorts list shows zero-state messaging when no cohorts/learners exist
-- [ ] **COH-03**: Cohorts list reflects the prototype's cohort-card information architecture (name, term hint, status, counts) using shadcn/ui primitives + brand tokens
+- [x] **COH-01**: Admin sees a cohorts list page at `/dashboard/teach/cohorts` with one card per distinct `learners.cohort` value, showing learner count and aggregate submission counts (total / needs-review / reviewed)
+- [x] **COH-02**: Cohorts list shows zero-state messaging when no cohorts/learners exist
+- [x] **COH-03**: Cohorts list reflects the prototype's cohort-card information architecture (name, term hint, status, counts) using shadcn/ui primitives + brand tokens
 
 ### Cohort Detail
 
-- [ ] **COD-01**: Admin opens `/dashboard/teach/cohorts/[cohort]` and sees a learners table with name, level (if available), submission count, latest activity timestamp
-- [ ] **COD-02**: Cohort detail includes a learner × module progress matrix indicating per-cell state: not-started / submitted / reviewed (derived from `submissions.status` + `reviewed_at`)
+- [x] **COD-01**: Admin opens `/dashboard/teach/cohorts/[cohort]` and sees a learners table with name, level (if available), submission count, latest activity timestamp
+- [x] **COD-02**: Cohort detail includes a learner × module progress matrix indicating per-cell state: not-started / submitted / reviewed (derived from `submissions.status` + `reviewed_at`)
 - [x] **COD-03**: Module catalog used by the matrix is a typed constant on the client/server (12 modules with `id`, `num`, `title`, supported `types`) matching the prototype's `MODULES` list
-- [ ] **COD-04**: Each learner row links to that learner's detail page
+- [x] **COD-04**: Each learner row links to that learner's detail page
 
 ### Learner Detail
 
@@ -117,13 +117,13 @@ Deferred to future milestones; tracked but not in current roadmap.
 | FND-03 | Phase 1 | Pending |
 | FND-04 | Phase 1 | Pending |
 | FND-05 | Phase 1 | Pending |
-| COH-01 | Phase 2 | Pending |
-| COH-02 | Phase 2 | Pending |
-| COH-03 | Phase 2 | Pending |
-| COD-01 | Phase 2 | Pending |
-| COD-02 | Phase 2 | Pending |
+| COH-01 | Phase 2 | Complete |
+| COH-02 | Phase 2 | Complete |
+| COH-03 | Phase 2 | Complete |
+| COD-01 | Phase 2 | Complete |
+| COD-02 | Phase 2 | Complete |
 | COD-03 | Phase 2 | Complete |
-| COD-04 | Phase 2 | Pending |
+| COD-04 | Phase 2 | Complete |
 | LRN-01 | Phase 3 | Pending |
 | LRN-02 | Phase 3 | Pending |
 | LRN-03 | Phase 3 | Pending |

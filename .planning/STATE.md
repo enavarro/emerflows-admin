@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 02-01-PLAN.md (getCohorts + getCohort real Supabase queries)
-last_updated: "2026-04-27T10:00:22.358Z"
+stopped_at: Completed 02-05-PLAN.md (Phase 2 cohorts hub happy-path Playwright spec — 5 tests, integration gate)
+last_updated: "2026-04-27T10:17:47.240Z"
 last_activity: 2026-04-27
 progress:
   total_phases: 4
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 10
-  completed_plans: 6
-  percent: 60
+  completed_plans: 10
+  percent: 100
 ---
 
 # Project State
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-04-25)
 ## Current Position
 
 Phase: 02 (cohorts-hub) — EXECUTING
-Plan: 2 of 5
+Plan: 3 of 5
 Status: Ready to execute
 Last activity: 2026-04-27
 
@@ -56,6 +56,7 @@ Progress: [██▌░░░░░░░] 25% (1 of 4 phases)
 
 *Updated after each plan completion*
 | Phase 02-cohorts-hub P01 | 4min | 2 tasks | 1 files |
+| Phase 02-cohorts-hub P05 | 2min | 1 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -71,6 +72,7 @@ Recent decisions affecting current work:
 - AI generation is upstream — Teach Admin is purely a viewer over `submissions.payload`
 - Audio playback via short-TTL signed URLs from private `recordings` bucket
 - [Phase 02-cohorts-hub]: Plan 02-01: implemented two-trip aggregate (D-01) for getCohorts, latest-wins matrix (D-05) for getCohort, with humanizeCohortId() placeholder for D-08 cohort name
+- [Phase 02-cohorts-hub]: Plan 02-05: COH-02 zero-state intentionally NOT covered by e2e (would require mutating live Supabase mid-test); verified manually via mock instead
 
 ### Pending Todos
 
@@ -90,6 +92,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-27T10:00:22.356Z
-Stopped at: Completed 02-01-PLAN.md (getCohorts + getCohort real Supabase queries)
+Last session: 2026-04-27T10:17:47.237Z
+Stopped at: Completed 02-05-PLAN.md (Phase 2 cohorts hub happy-path Playwright spec — 5 tests, integration gate)
 Resume file: None
