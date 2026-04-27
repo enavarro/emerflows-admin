@@ -109,6 +109,16 @@ function humanizeCohortId(id: string): string {
     .join(' ');
 }
 
+// Local helper — parse an ISO 8601 timestamp into epoch ms, returning -1
+// for null/undefined/invalid strings so it sorts strictly before any real
+// timestamp. Used to compare submitted_at/reviewed_at robustly across
+// possible zone-format variations (see WR-03 note in getCohort).
+function tsMs(iso: string | null | undefined): number {
+  if (!iso) return -1;
+  const t = Date.parse(iso);
+  return Number.isNaN(t) ? -1 : t;
+}
+
 export async function getCohort(cohortId: string): Promise<CohortDetail> {
   const client = createAdminClient();
 
@@ -186,15 +196,27 @@ export async function getCohort(cohortId: string): Promise<CohortDetail> {
     subsByLearner.set(sub.learner_id, arr);
   }
 
+  // WR-03: compare timestamps as numeric epoch-ms via Date.parse() rather
+  // than lexicographic string compare. ISO 8601 strings only sort
+  // correctly lexicographically when every value uses the same zone
+  // format (e.g. PostgREST's `+00:00` suffix). If a future migration ever
+  // emits `Z`-suffixed or local-zoned timestamps, lexicographic order
+  // would silently mis-order rows. Parsing once per comparison is cheap
+  // and removes the foot-gun.
   const learnerRowList: LearnerRow[] = learners.map((l) => {
     const learnerSubs = subsByLearner.get(l.id as string) ?? [];
     const distinctPerLearner = new Set<string>();
     let latestTs: string | null = null;
+    let latestMs = -1;
     for (const s of learnerSubs) {
       distinctPerLearner.add(`${s.module_id}|${s.type}`);
+      const submittedMs = tsMs(s.submitted_at);
+      const reviewedMs = tsMs(s.reviewed_at);
+      const candidateMs = Math.max(submittedMs, reviewedMs);
       const candidate =
-        s.reviewed_at && s.reviewed_at > s.submitted_at ? s.reviewed_at : s.submitted_at;
-      if (latestTs === null || candidate > latestTs) {
+        s.reviewed_at && reviewedMs > submittedMs ? s.reviewed_at : s.submitted_at;
+      if (candidateMs > latestMs) {
+        latestMs = candidateMs;
         latestTs = candidate;
       }
     }
@@ -211,14 +233,17 @@ export async function getCohort(cohortId: string): Promise<CohortDetail> {
 
   // 5. Build matrix per D-05 (LATEST submission per (learner, module) wins).
   //    Latest = max(submitted_at). Resolves ties deterministically by id desc.
+  //    Numeric epoch-ms comparison via tsMs() — see WR-03 note above.
   const latestByLearnerModule = new Map<string, SubmissionAggRow>();
   for (const sub of subRows) {
     const key = `${sub.learner_id}|${sub.module_id}`;
     const existing = latestByLearnerModule.get(key);
+    const newMs = tsMs(sub.submitted_at);
+    const oldMs = existing ? tsMs(existing.submitted_at) : -1;
     if (
       !existing ||
-      sub.submitted_at > existing.submitted_at ||
-      (sub.submitted_at === existing.submitted_at && sub.id > existing.id)
+      newMs > oldMs ||
+      (newMs === oldMs && sub.id > existing.id)
     ) {
       latestByLearnerModule.set(key, sub);
     }
