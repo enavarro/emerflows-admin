@@ -14,8 +14,12 @@ import type {
   Cohort,
   CohortDetail,
   LearnerDetail,
+  LearnerRow,
+  ModuleProgressCell,
+  ModuleType,
   SubmissionDetail
 } from './types';
+import { MODULES } from '@/features/teach/constants/modules';
 import { createAdminClient } from '@/lib/supabase/admin';
 
 export async function getCohorts(): Promise<Cohort[]> {
@@ -106,8 +110,145 @@ function humanizeCohortId(id: string): string {
 }
 
 export async function getCohort(cohortId: string): Promise<CohortDetail> {
-  // TODO(Phase2 / COD-01..04): join learners + submissions, build module progress matrix
-  throw new Error(`getCohort(${cohortId}) is not implemented — see Phase 2 plan (COD-01..04)`);
+  const client = createAdminClient();
+
+  // 1. Load the cohort's learners (sorted by name; default UI order).
+  const { data: learnerRows, error: learnersError } = await client
+    .from('learners')
+    .select('id, name, cohort, level, external_id')
+    .eq('cohort', cohortId)
+    .order('name', { ascending: true });
+
+  if (learnersError) {
+    throw new Error(`getCohort(${cohortId}): failed to load learners: ${learnersError.message}`);
+  }
+
+  const learners = learnerRows ?? [];
+  const learnerIds = learners.map((l) => l.id as string);
+
+  // 2. Load submissions for those learners. Empty learner set → skip the
+  //    second trip and return a zero-learner CohortDetail.
+  type SubmissionAggRow = {
+    id: string;
+    learner_id: string;
+    module_id: string;
+    type: ModuleType;
+    submitted_at: string;
+    reviewed_at: string | null;
+  };
+
+  let subRows: SubmissionAggRow[] = [];
+
+  if (learnerIds.length > 0) {
+    const { data, error: subsError } = await client
+      .from('submissions')
+      .select('id, learner_id, module_id, type, submitted_at, reviewed_at')
+      .in('learner_id', learnerIds);
+
+    if (subsError) {
+      throw new Error(`getCohort(${cohortId}): failed to load submissions: ${subsError.message}`);
+    }
+    subRows = (data ?? []) as SubmissionAggRow[];
+  }
+
+  // 3. Build cohort summary counts (mirror D-02..D-04 from getCohorts but
+  //    scoped to this cohort).
+  const distinctSubmissionKeys = new Set<string>();
+  let needsReview = 0;
+  let reviewed = 0;
+  for (const sub of subRows) {
+    distinctSubmissionKeys.add(`${sub.learner_id}|${sub.module_id}|${sub.type}`);
+    if (sub.reviewed_at === null) {
+      needsReview += 1;
+    } else {
+      reviewed += 1;
+    }
+  }
+
+  const cohort: Cohort = {
+    id: cohortId,
+    name: humanizeCohortId(cohortId),
+    termHint: humanizeCohortId(cohortId),
+    learnerCount: learners.length,
+    totalSubmissions: distinctSubmissionKeys.size,
+    needsReview,
+    reviewed
+  };
+
+  // 4. Build LearnerRow[] (per-learner submissionCount uses distinct
+  //    (module_id, type), matching D-02 semantics scoped to a single
+  //    learner; latestActivityAt = max(submitted_at, reviewed_at) so
+  //    a review action also bumps the activity timestamp).
+  const subsByLearner = new Map<string, SubmissionAggRow[]>();
+  for (const sub of subRows) {
+    const arr = subsByLearner.get(sub.learner_id) ?? [];
+    arr.push(sub);
+    subsByLearner.set(sub.learner_id, arr);
+  }
+
+  const learnerRowList: LearnerRow[] = learners.map((l) => {
+    const learnerSubs = subsByLearner.get(l.id as string) ?? [];
+    const distinctPerLearner = new Set<string>();
+    let latestTs: string | null = null;
+    for (const s of learnerSubs) {
+      distinctPerLearner.add(`${s.module_id}|${s.type}`);
+      const candidate =
+        s.reviewed_at && s.reviewed_at > s.submitted_at ? s.reviewed_at : s.submitted_at;
+      if (latestTs === null || candidate > latestTs) {
+        latestTs = candidate;
+      }
+    }
+    return {
+      id: l.id as string,
+      name: l.name as string,
+      cohort: l.cohort as string,
+      level: (l.level as string | null) ?? undefined,
+      externalId: (l.external_id as string | null) ?? undefined,
+      submissionCount: distinctPerLearner.size,
+      latestActivityAt: latestTs
+    };
+  });
+
+  // 5. Build matrix per D-05 (LATEST submission per (learner, module) wins).
+  //    Latest = max(submitted_at). Resolves ties deterministically by id desc.
+  const latestByLearnerModule = new Map<string, SubmissionAggRow>();
+  for (const sub of subRows) {
+    const key = `${sub.learner_id}|${sub.module_id}`;
+    const existing = latestByLearnerModule.get(key);
+    if (
+      !existing ||
+      sub.submitted_at > existing.submitted_at ||
+      (sub.submitted_at === existing.submitted_at && sub.id > existing.id)
+    ) {
+      latestByLearnerModule.set(key, sub);
+    }
+  }
+
+  const matrix: Record<string, ModuleProgressCell[]> = {};
+  for (const learner of learnerRowList) {
+    const cells: ModuleProgressCell[] = MODULES.map((mod) => {
+      const latest = latestByLearnerModule.get(`${learner.id}|${mod.id}`);
+      if (!latest) {
+        return {
+          moduleId: mod.id,
+          state: 'not-started',
+          submissionId: null,
+          submittedAt: null,
+          reviewedAt: null
+        };
+      }
+      return {
+        moduleId: mod.id,
+        state: latest.reviewed_at === null ? 'submitted' : 'reviewed',
+        submissionId: latest.id,
+        submittedAt: latest.submitted_at,
+        reviewedAt: latest.reviewed_at
+      };
+    });
+    matrix[learner.id] = cells;
+  }
+
+  return { cohort, learners: learnerRowList, matrix };
 }
 
 export async function getLearner(learnerId: string): Promise<LearnerDetail> {
