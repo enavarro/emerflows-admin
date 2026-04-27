@@ -123,9 +123,16 @@ export async function getCohort(cohortId: string): Promise<CohortDetail> {
   const client = createAdminClient();
 
   // 1. Load the cohort's learners (sorted by name; default UI order).
+  //
+  // Schema note: `learners` exposes id, name, cohort, external_id,
+  // created_at, is_demo, demo_session_jti — there is no `level` column.
+  // The LearnerRow contract carries an optional `level` for forward
+  // compatibility (a future migration may add a level column or join);
+  // for now we leave it undefined and the UI renders the '—' fallback
+  // (see learners-table.tsx — `learner.level ?? '—'`).
   const { data: learnerRows, error: learnersError } = await client
     .from('learners')
-    .select('id, name, cohort, level, external_id')
+    .select('id, name, cohort, external_id')
     .eq('cohort', cohortId)
     .order('name', { ascending: true });
 
@@ -138,6 +145,14 @@ export async function getCohort(cohortId: string): Promise<CohortDetail> {
 
   // 2. Load submissions for those learners. Empty learner set → skip the
   //    second trip and return a zero-learner CohortDetail.
+  //
+  // Schema note: `submissions` exposes created_at (the canonical "when
+  // the learner submitted" timestamp), reviewed_at, attempt_num, etc.
+  // There is no `submitted_at` column. We alias created_at → submitted_at
+  // in TS so downstream logic + wire-format names stay aligned with
+  // CohortDetail / SubmissionSummary contracts (LearnerRow.latestActivityAt
+  // and ModuleProgressCell.submittedAt are documented as
+  // "when the submission was created").
   type SubmissionAggRow = {
     id: string;
     learner_id: string;
@@ -152,13 +167,28 @@ export async function getCohort(cohortId: string): Promise<CohortDetail> {
   if (learnerIds.length > 0) {
     const { data, error: subsError } = await client
       .from('submissions')
-      .select('id, learner_id, module_id, type, submitted_at, reviewed_at')
+      .select('id, learner_id, module_id, type, created_at, reviewed_at')
       .in('learner_id', learnerIds);
 
     if (subsError) {
       throw new Error(`getCohort(${cohortId}): failed to load submissions: ${subsError.message}`);
     }
-    subRows = (data ?? []) as SubmissionAggRow[];
+    subRows = ((data ?? []) as Array<{
+      id: string;
+      learner_id: string;
+      module_id: string;
+      type: ModuleType;
+      created_at: string;
+      reviewed_at: string | null;
+    }>).map((r) => ({
+      id: r.id,
+      learner_id: r.learner_id,
+      module_id: r.module_id,
+      type: r.type,
+      // Alias DB column created_at to the wire-format submitted_at name.
+      submitted_at: r.created_at,
+      reviewed_at: r.reviewed_at
+    }));
   }
 
   // 3. Build cohort summary counts (mirror D-02..D-04 from getCohorts but
@@ -224,7 +254,9 @@ export async function getCohort(cohortId: string): Promise<CohortDetail> {
       id: l.id as string,
       name: l.name as string,
       cohort: l.cohort as string,
-      level: (l.level as string | null) ?? undefined,
+      // No level column on learners yet (see schema note above). Leave
+      // undefined so the UI renders the '—' fallback contract intact.
+      level: undefined,
       externalId: (l.external_id as string | null) ?? undefined,
       submissionCount: distinctPerLearner.size,
       latestActivityAt: latestTs

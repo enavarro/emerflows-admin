@@ -23,10 +23,18 @@ export default async function CohortsPage() {
   // Server-side prefetch: queries.ts intentionally does NOT import the
   // server-only service (CR-01) so client bundles stay clean. The route
   // wires queryFn -> getCohorts() here, in RSC, where server-only is fine.
-  // MUST await — queries.ts has a throwing placeholder queryFn (CR-01),
-  // so the client crashes if hydration doesn't include resolved data.
+  //
+  // Use fetchQuery (NOT prefetchQuery): prefetchQuery SWALLOWS errors,
+  // which means a failing service call (schema drift, RLS, transient
+  // outage) is silently dropped from the dehydrated state and the
+  // client falls through to the placeholder queryFn from CR-01 — which
+  // throws the cryptic "missingPrefetch" error. fetchQuery propagates
+  // the original error to Next.js's error boundary so the actual
+  // failure is visible. The successful result is still inserted into
+  // the cache, so dehydrate(queryClient) hydrates the client
+  // identically to the prefetch path.
   const queryClient = getQueryClient();
-  await queryClient.prefetchQuery({
+  await queryClient.fetchQuery({
     queryKey: teachKeys.cohorts(),
     queryFn: () => getCohorts()
   });
