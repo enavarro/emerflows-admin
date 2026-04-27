@@ -1,18 +1,35 @@
 import { queryOptions } from '@tanstack/react-query';
 
+import type {
+  Cohort,
+  CohortDetail,
+  LearnerDetail,
+  SubmissionDetail
+} from './types';
+
 // ============================================================
 // Teach Admin — React Query key factory + query options (FND-03)
 // ============================================================
 // Mutation invalidation in Phase 3 (mark-as-reviewed) keys off
 // teachKeys.all to refresh cohort matrix + learner list at once.
 //
-// IMPORTANT: `./service` is `'server-only'`. To keep this module safely
-// importable from `'use client'` components (e.g. cohorts-listing.tsx,
-// cohort-detail.tsx), we MUST NOT statically import the service here.
-// Each `queryFn` dynamic-imports the service so Next.js code-splits it
-// out of the client bundle (see PATTERNS.md). On the server (RSC
-// prefetch), the dynamic import resolves synchronously; on the client,
-// `queryFn` is never invoked because data is hydrated from the server.
+// CR-01: `./service` is `'server-only'`. This module is imported by
+// `'use client'` components (e.g. cohorts-listing.tsx, cohort-detail.tsx)
+// AND by server route files. It MUST NOT pull `service.ts` into the
+// client bundle — even a dynamic `import('./service')` is traced by
+// Turbopack as a module dependency and triggers the server-only guard.
+//
+// Pattern: queries.ts owns ONLY the cache key + a placeholder queryFn
+// that throws. Server prefetch routes call the service directly via
+// `prefetchQuery({ queryKey, queryFn })` (see app/dashboard/teach/...).
+// On the client, hydration installs the server-prefetched data into the
+// React Query cache, so `useSuspenseQuery` resolves synchronously and
+// the placeholder queryFn is NEVER invoked.
+//
+// If you ever see "teach query missing prefetch" thrown at runtime, it
+// means a client component called `useSuspenseQuery(xQueryOptions(...))`
+// without a matching server-side `prefetchQuery` — fix the route, not
+// this file.
 // ============================================================
 
 export const teachKeys = {
@@ -24,38 +41,33 @@ export const teachKeys = {
     [...teachKeys.all, 'submission', submissionId] as const
 };
 
+function missingPrefetch(label: string): never {
+  throw new Error(
+    `teach: ${label} queryFn was invoked, but data should have been hydrated from the server. ` +
+      `Add a matching prefetchQuery({ queryKey, queryFn: () => get${label.charAt(0).toUpperCase() + label.slice(1)}(...) }) to the route file.`
+  );
+}
+
 export const cohortsQueryOptions = () =>
-  queryOptions({
+  queryOptions<Cohort[]>({
     queryKey: teachKeys.cohorts(),
-    queryFn: async () => {
-      const { getCohorts } = await import('./service');
-      return getCohorts();
-    }
+    queryFn: () => missingPrefetch('cohorts')
   });
 
 export const cohortQueryOptions = (cohortId: string) =>
-  queryOptions({
+  queryOptions<CohortDetail>({
     queryKey: teachKeys.cohort(cohortId),
-    queryFn: async () => {
-      const { getCohort } = await import('./service');
-      return getCohort(cohortId);
-    }
+    queryFn: () => missingPrefetch(`cohort(${cohortId})`)
   });
 
 export const learnerQueryOptions = (learnerId: string) =>
-  queryOptions({
+  queryOptions<LearnerDetail>({
     queryKey: teachKeys.learner(learnerId),
-    queryFn: async () => {
-      const { getLearner } = await import('./service');
-      return getLearner(learnerId);
-    }
+    queryFn: () => missingPrefetch(`learner(${learnerId})`)
   });
 
 export const submissionQueryOptions = (submissionId: string) =>
-  queryOptions({
+  queryOptions<SubmissionDetail>({
     queryKey: teachKeys.submission(submissionId),
-    queryFn: async () => {
-      const { getSubmission } = await import('./service');
-      return getSubmission(submissionId);
-    }
+    queryFn: () => missingPrefetch(`submission(${submissionId})`)
   });

@@ -7,7 +7,8 @@ import { Icons } from '@/components/icons';
 import PageContainer from '@/components/layout/page-container';
 import { requireAdmin } from '@/lib/auth/require-admin';
 import { getQueryClient } from '@/lib/query-client';
-import { cohortsQueryOptions } from '@/features/teach/api/queries';
+import { teachKeys } from '@/features/teach/api/queries';
+import { getCohorts } from '@/features/teach/api/service';
 import { CohortsListing } from '@/features/teach/components/cohorts-listing';
 
 export const metadata = {
@@ -19,8 +20,14 @@ export default async function CohortsPage() {
   // accidental exposure if the segment layout is ever removed or restructured.
   await requireAdmin();
 
+  // Server-side prefetch: queries.ts intentionally does NOT import the
+  // server-only service (CR-01) so client bundles stay clean. The route
+  // wires queryFn -> getCohorts() here, in RSC, where server-only is fine.
   const queryClient = getQueryClient();
-  void queryClient.prefetchQuery(cohortsQueryOptions());
+  void queryClient.prefetchQuery({
+    queryKey: teachKeys.cohorts(),
+    queryFn: () => getCohorts()
+  });
 
   return (
     <PageContainer

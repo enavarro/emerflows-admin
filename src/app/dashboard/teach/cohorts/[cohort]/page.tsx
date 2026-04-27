@@ -7,7 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { requireAdmin } from '@/lib/auth/require-admin';
 import { getQueryClient } from '@/lib/query-client';
-import { cohortQueryOptions } from '@/features/teach/api/queries';
+import { teachKeys } from '@/features/teach/api/queries';
+import { getCohort } from '@/features/teach/api/service';
 import { CohortDetail } from '@/features/teach/components/cohort-detail';
 import { humanizeCohortId } from '@/features/teach/lib/format';
 
@@ -24,8 +25,14 @@ export default async function CohortDetailPage({ params }: CohortDetailPageProps
   // Defense-in-depth: layout already gates, but page-level guard is belt-and-suspenders.
   await requireAdmin();
 
+  // Server-side prefetch: queries.ts intentionally does NOT import the
+  // server-only service (CR-01) so client bundles stay clean. The route
+  // wires queryFn -> getCohort() here, in RSC, where server-only is fine.
   const queryClient = getQueryClient();
-  void queryClient.prefetchQuery(cohortQueryOptions(cohortId));
+  void queryClient.prefetchQuery({
+    queryKey: teachKeys.cohort(cohortId),
+    queryFn: () => getCohort(cohortId)
+  });
 
   // WR-01: render PageContainer at the route level (not inside the suspense
   // child) so the page header is stable across loading/loaded states. The
