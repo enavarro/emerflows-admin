@@ -39,7 +39,7 @@ const DOT_CLASSES: Record<ProgressState, string> = {
 };
 
 export function ProgressMatrix({ cohortDetail }: ProgressMatrixProps) {
-  const learners = [...cohortDetail.learners].sort((a, b) =>
+  const learners = cohortDetail.learners.toSorted((a, b) =>
     a.name.localeCompare(b.name)
   );
 
