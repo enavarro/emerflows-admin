@@ -31,16 +31,18 @@ dashboard or running SQL.
   `recordings/<cohort>/<learner-uuid>/module-XX-attempt-N.webm`
 - ✓ RPCs: `get_upload_path`, `get_latest_submission`, `get_submitted_attempts`,
   `check_attempt_status`, plus demo variants and `save_*` writers
+- ✓ Admin sees a `Teach` section in the sidebar nav and lands on a cohorts list
+  *(Validated in Phase 2: cohorts-hub)*
+- ✓ Admin sees all cohorts (currently just `spring-2026`) with learner counts and
+  submission/review status summary
+  *(Validated in Phase 2: cohorts-hub — 4/5 UAT pass + zero-state via static check)*
+- ✓ Admin opens a cohort and sees its learners in a table plus a module-progress matrix
+  (learner × module → submitted / reviewed / not-yet)
+  *(Validated in Phase 2: cohorts-hub — Spring 2026 detail page with Learners + Progress matrix tabs)*
 
 ### Active
 
 <!-- v1 hypotheses for the Teach Admin milestone. -->
-
-- [ ] Admin sees a `Teach` section in the sidebar nav and lands on a cohorts list
-- [ ] Admin sees all cohorts (currently just `spring-2026`) with learner counts and
-  submission/review status summary
-- [ ] Admin opens a cohort and sees its learners in a table plus a module-progress matrix
-  (learner × module → submitted / reviewed / not-yet)
 - [ ] Admin opens a learner and sees that learner's submissions grouped by module, with
   type (speaking / conversation), attempt number, status, submitted-at
 - [ ] Admin opens a speaking submission and listens to the audio (signed-URL playback)
@@ -148,4 +150,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-25 after initialization*
+*Last updated: 2026-04-27 after Phase 2 (cohorts-hub) completion*
