@@ -102,3 +102,29 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | 2. Cohorts Hub | 0/TBD | Not started | - |
 | 3. Learner Deep-Dive & Review | 0/TBD | Not started | - |
 | 4. Visual Fidelity & Verification | 0/TBD | Not started | - |
+
+## Backlog
+
+### Phase 999.1: Schema — denormalized `submissions.cohort` column with FK + backfill (BACKLOG)
+
+**Goal:** Add a denormalized `cohort` column to `public.submissions` so cohort-scoped queries don't have to two-trip through `learners`. Surfaced during Phase 2 UAT — user explicitly requested this for future implementations to avoid coupling all cohort lookups through learner aggregation.
+
+**Why this matters:**
+Today, `service.ts:getCohort(cohortId)` does:
+1. `SELECT id FROM learners WHERE cohort = $1` — get learnerIds
+2. `SELECT ... FROM submissions WHERE learner_id IN (learnerIds)` — attribute submissions to the cohort
+
+This pattern works but couples every submission-level feature to learner aggregation. Adding `submissions.cohort` enables single-trip queries, simpler RLS policies, easier exports/analytics, and reduced surface area for cohort-move bugs.
+
+**Migration outline:**
+- (a) `ALTER TABLE submissions ADD COLUMN cohort text NULL`
+- (b) Backfill: `UPDATE submissions s SET cohort = l.cohort FROM learners l WHERE s.learner_id = l.id`
+- (c) `ALTER TABLE submissions ALTER COLUMN cohort SET NOT NULL` + add FK constraint to a cohorts table (or check constraint if cohorts remain string-keyed)
+- (d) Update insert/update flows in app + edge functions to set `cohort` on submission creation
+- (e) Decide cohort-move semantics: cascading UPDATE on `learners.cohort` change, or freeze at submission-time
+
+**Requirements:** TBD
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (promote with /gsd-review-backlog when ready)
