@@ -19,7 +19,7 @@ function secret(): Uint8Array {
   return new TextEncoder().encode(s);
 }
 
-export async function signDemoJwt(claims: DemoJwtClaims, ttlSec = 24 * 60 * 60): Promise<string> {
+export async function signDemoJwt(claims: DemoJwtClaims, ttlSec = 30 * 24 * 60 * 60): Promise<string> {
   return new SignJWT({ ...claims })
     .setProtectedHeader({ alg: 'HS256' })
     .setJti(claims.jti)

@@ -13,7 +13,7 @@ import { get, setex, sadd, smembers, srem, sismember } from '@/lib/redis';
 import { mintInputSchema } from '@/features/demos/schemas/mint-input';
 import type { DemoToken } from '@/features/demos/api/types';
 
-const TOKEN_TTL_SEC = 24 * 60 * 60;
+const TOKEN_TTL_SEC = 30 * 24 * 60 * 60;
 const HARDCODED_MAX_SUBMISSIONS = 2;
 const HARDCODED_MAX_CONVERSATION_SEC = 210;
 const ACTIVE_INDEX = 'demo:tokens:active';

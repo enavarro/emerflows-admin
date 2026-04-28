@@ -54,8 +54,8 @@ export function MintTokenSheetTrigger() {
         <SheetHeader>
           <SheetTitle>Mint a demo link</SheetTitle>
           <SheetDescription>
-            Generates a 24h JWT-protected URL. Two submissions, max 210s conversation, copy the link
-            from the toast or the table.
+            Generates a 30-day JWT-protected URL. Two submissions, max 210s conversation, copy the
+            link from the toast or the table.
           </SheetDescription>
         </SheetHeader>
 
