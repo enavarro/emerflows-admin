@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 03-02-mark-reviewed-route-PLAN.md
-last_updated: "2026-04-29T12:17:23.603Z"
+stopped_at: Completed 03-03-icon-registry-PLAN.md
+last_updated: "2026-04-29T12:21:12.545Z"
 last_activity: 2026-04-29
 progress:
   total_phases: 6
   completed_phases: 2
   total_plans: 16
-  completed_plans: 12
-  percent: 75
+  completed_plans: 13
+  percent: 81
 ---
 
 # Project State
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-04-25)
 ## Current Position
 
 Phase: 03 (learner-deep-dive-review) — EXECUTING
-Plan: 3 of 6
+Plan: 4 of 6
 Status: Ready to execute
 Last activity: 2026-04-29
 
@@ -60,6 +60,7 @@ Progress: [██▌░░░░░░░] 25% (1 of 4 phases)
 | Phase 02-cohorts-hub P05 | 2min | 1 tasks | 1 files |
 | Phase 03 P01 | 3min | 2 tasks | 1 files |
 | Phase 03 P02 | 2min | 2 tasks | 3 files |
+| Phase 03 P03 | 2min | 1 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -78,6 +79,7 @@ Recent decisions affecting current work:
 - [Phase 02-cohorts-hub]: Plan 02-05: COH-02 zero-state intentionally NOT covered by e2e (would require mutating live Supabase mid-test); verified manually via mock instead
 - [Phase 03]: Plan 03-01: getLearner uses two-trip aggregate (mirrors getCohort); submissionsByModule unsorted on wire (UI sorts per D-05); getSubmission applies D-10 graceful degrade for audio signing
 - [Phase 03]: Plan 03-02: Mark-reviewed route + mutation. Used user-session Supabase client (D-04a) — auth.uid() flows naturally as reviewed_by. Defense-in-depth requireAdmin() at handler entry. Sibling service-client.ts preserves service.ts server-only purity. Mutation invalidates teachKeys.all (REV-02 cascade).
+- [Phase 03]: [Phase 03]: Plan 03-03: Icon registry extension. Used IconArrowBackUp for undo (semantically correct). Added two pure aliases (messageSquare, sparkle) so consumer JSX matches UI-SPEC verbatim. Pre-existing aliases (spinner, forms) cover the rest of UI-SPEC's icon needs.
 
 ### Pending Todos
 
@@ -97,6 +99,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-29T12:17:16.395Z
-Stopped at: Completed 03-02-mark-reviewed-route-PLAN.md
+Last session: 2026-04-29T12:21:12.542Z
+Stopped at: Completed 03-03-icon-registry-PLAN.md
 Resume file: None
