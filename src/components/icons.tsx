@@ -2,6 +2,7 @@ import {
   IconAdjustmentsHorizontal,
   IconAlertCircle,
   IconAlertTriangle,
+  IconArrowBackUp,
   IconArrowRight,
   IconBell,
   IconBold,
@@ -39,6 +40,7 @@ import {
   IconFileTypePdf,
   IconFileTypeDoc,
   IconFileTypeXls,
+  IconFileX,
   IconFileZip,
   IconFolder,
   IconGripVertical,
@@ -53,6 +55,7 @@ import {
   IconLogin,
   IconLogout,
   IconMessage,
+  IconMicrophone,
   IconMinus,
   IconMoon,
   IconMusic,
@@ -145,6 +148,8 @@ export const Icons = {
 
   // Communication
   chat: IconMessage,
+  messageSquare: IconMessage,
+  mic: IconMicrophone,
   notification: IconBell,
   phone: IconPhone,
   video: IconVideo,
@@ -157,6 +162,7 @@ export const Icons = {
   fileTypePdf: IconFileTypePdf,
   fileTypeDoc: IconFileTypeDoc,
   fileTypeXls: IconFileTypeXls,
+  fileX: IconFileX,
   fileZip: IconFileZip,
   media: IconPhoto,
   music: IconMusic,
@@ -169,6 +175,7 @@ export const Icons = {
   login: IconLogin,
   logout: IconLogout,
   gripVertical: IconGripVertical,
+  undo: IconArrowBackUp,
 
   // Shapes / Indicators
   circle: IconCircle,
@@ -191,6 +198,7 @@ export const Icons = {
   pro: IconCrown,
   exclusive: IconStar,
   sparkles: IconSparkles,
+  sparkle: IconSparkles,
   badgeCheck: IconRosetteDiscountCheck,
   lock: IconLock,
 
