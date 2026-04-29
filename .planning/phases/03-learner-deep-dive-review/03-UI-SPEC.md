@@ -274,7 +274,7 @@ Transcript section MUST still render beneath this notice. Mark-reviewed control 
 
 **Transcript line structure (`TranscriptLine` component):**
 
-- Outer: `<div className='border-l-2 {classificationBorderClass} pl-3 py-0.5'>`
+- Outer: `<div className='border-l-2 {classificationBorderClass} pl-3 py-1'>`
 - Classification → border class:
   - `strong` → `border-brand-sage`
   - `needs improvement` → `border-amber-500`
@@ -299,7 +299,7 @@ Flat vertical list, grouped by category. Category headers above each group.
     <div className='flex flex-col gap-6'>
       {/* Group: Pronunciation */}
       <div className='flex flex-col gap-3'>
-        <p className='text-xs uppercase tracking-wider text-muted-foreground flex items-center gap-1.5'>
+        <p className='text-xs uppercase tracking-wider text-muted-foreground flex items-center gap-2'>
           <Icons.mic className='h-3 w-3' aria-hidden='true' />
           Pronunciation
         </p>
@@ -308,7 +308,7 @@ Flat vertical list, grouped by category. Category headers above each group.
       </div>
       {/* Group: Delivery */}
       <div className='flex flex-col gap-3'>
-        <p className='text-xs uppercase tracking-wider text-muted-foreground flex items-center gap-1.5'>
+        <p className='text-xs uppercase tracking-wider text-muted-foreground flex items-center gap-2'>
           <Icons.sparkle className='h-3 w-3' aria-hidden='true' />
           Delivery
         </p>
@@ -431,7 +431,7 @@ If a flag has a null/empty `word`, skip the inline highlight (pair-level flag wi
 ```
 <Card>
   <CardHeader>
-    <h3 className='text-sm font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5'>
+    <h3 className='text-sm font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2'>
       <Icons.sparkle className='h-4 w-4' aria-hidden='true' />
       Exercise Summary
     </h3>
@@ -477,7 +477,7 @@ Replace button with an inline group (not a `<Button>`):
 
 ```
 <div className='flex items-center gap-3'>
-  <span className='flex items-center gap-1.5 text-sm text-muted-foreground'>
+  <span className='flex items-center gap-2 text-sm text-muted-foreground'>
     <Icons.check className='h-4 w-4 text-brand-sage' aria-hidden='true' />
     Reviewed by instructor on {formattedDate}
   </span>
