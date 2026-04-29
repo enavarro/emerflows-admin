@@ -17,10 +17,13 @@ import type {
   LearnerRow,
   ModuleProgressCell,
   ModuleType,
-  SubmissionDetail
+  RecordingPayload,
+  SubmissionDetail,
+  SubmissionPayload,
+  SubmissionSummary
 } from './types';
-import { MODULES } from '@/features/teach/constants/modules';
-import { createAdminClient } from '@/lib/supabase/admin';
+import { MODULES, getModule } from '@/features/teach/constants/modules';
+import { createAdminClient, createSignedRecordingUrl } from '@/lib/supabase/admin';
 
 export async function getCohorts(): Promise<Cohort[]> {
   const client = createAdminClient();
@@ -309,8 +312,101 @@ export async function getCohort(cohortId: string): Promise<CohortDetail> {
 }
 
 export async function getLearner(learnerId: string): Promise<LearnerDetail> {
-  // TODO(Phase3 / LRN-01..03): fetch learner + submissions grouped by module
-  throw new Error(`getLearner(${learnerId}) is not implemented — see Phase 3 plan (LRN-01..03)`);
+  const client = createAdminClient();
+
+  // Trip 1: load the learner row.
+  //
+  // Schema note: `learners` exposes id, name, cohort, external_id — there
+  // is no `level` column today, so we leave LearnerRow.level undefined and
+  // the UI renders the '—' fallback (D-09). Map external_id → externalId.
+  const { data: learnerRow, error: learnerError } = await client
+    .from('learners')
+    .select('id, name, cohort, external_id')
+    .eq('id', learnerId)
+    .maybeSingle();
+
+  if (learnerError) {
+    throw new Error(
+      `getLearner(${learnerId}): failed to load learner: ${learnerError.message}`
+    );
+  }
+  if (!learnerRow) {
+    throw new Error(`getLearner(${learnerId}): learner not found`);
+  }
+
+  // Trip 2: load submissions for this learner.
+  //
+  // Schema note: `submissions` has no `submitted_at` column — alias DB
+  // created_at to wire-format submittedAt. attempt_num → attemptNum.
+  const { data: subRows, error: subsError } = await client
+    .from('submissions')
+    .select(
+      'id, learner_id, module_id, type, attempt_num, status, created_at, reviewed_at, reviewed_by'
+    )
+    .eq('learner_id', learnerId);
+
+  if (subsError) {
+    throw new Error(
+      `getLearner(${learnerId}): failed to load submissions: ${subsError.message}`
+    );
+  }
+
+  const rows = subRows ?? [];
+
+  // Aggregate submissionCount (distinct on module_id|type per D-02 scoped
+  // to a single learner) + latestActivityAt (max of submitted/reviewed).
+  // tsMs() handles ISO timestamp parsing safely (see WR-03 in getCohort).
+  const distinctPerLearner = new Set<string>();
+  let latestTs: string | null = null;
+  let latestMs = -1;
+  for (const s of rows) {
+    distinctPerLearner.add(`${s.module_id}|${s.type}`);
+    const submittedMs = tsMs(s.created_at as string);
+    const reviewedMs = tsMs(s.reviewed_at as string | null);
+    const candidateMs = Math.max(submittedMs, reviewedMs);
+    const candidate =
+      s.reviewed_at && reviewedMs > submittedMs
+        ? (s.reviewed_at as string)
+        : (s.created_at as string);
+    if (candidateMs > latestMs) {
+      latestMs = candidateMs;
+      latestTs = candidate;
+    }
+  }
+
+  const learner: LearnerRow = {
+    id: learnerRow.id as string,
+    name: learnerRow.name as string,
+    cohort: learnerRow.cohort as string,
+    level: undefined,
+    externalId: (learnerRow.external_id as string | null) ?? undefined,
+    submissionCount: distinctPerLearner.size,
+    latestActivityAt: latestTs
+  };
+
+  // Group submissions by module_id (LRN-02). Wire-format aliasing:
+  // created_at → submittedAt, learner_id → learnerId, module_id → moduleId,
+  // attempt_num → attemptNum, reviewed_by → reviewedBy. Sort order is a
+  // UI-side concern (D-05) — we return rows unsorted on the wire.
+  const submissionsByModule: Record<string, SubmissionSummary[]> = {};
+  for (const r of rows) {
+    const summary: SubmissionSummary = {
+      id: r.id as string,
+      learnerId: r.learner_id as string,
+      moduleId: r.module_id as string,
+      type: r.type as ModuleType,
+      attemptNum: (r.attempt_num as number) as 1 | 2,
+      status: r.status as string,
+      submittedAt: r.created_at as string,
+      reviewedAt: (r.reviewed_at as string | null) ?? null,
+      reviewedBy: (r.reviewed_by as string | null) ?? null
+    };
+    const arr = submissionsByModule[summary.moduleId] ?? [];
+    arr.push(summary);
+    submissionsByModule[summary.moduleId] = arr;
+  }
+
+  return { learner, submissionsByModule };
 }
 
 export async function getSubmission(submissionId: string): Promise<SubmissionDetail> {
