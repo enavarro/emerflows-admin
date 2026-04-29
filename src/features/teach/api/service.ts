@@ -410,8 +410,105 @@ export async function getLearner(learnerId: string): Promise<LearnerDetail> {
 }
 
 export async function getSubmission(submissionId: string): Promise<SubmissionDetail> {
-  // TODO(Phase3 / SPK-*, CNV-*): fetch submission + payload + sign audio URL via createSignedRecordingUrl
-  throw new Error(
-    `getSubmission(${submissionId}) is not implemented — see Phase 3 plan (SPK-*, CNV-*)`
-  );
+  const client = createAdminClient();
+
+  // Load the submission row + JSONB payload. Supabase returns payload as a
+  // parsed object — we narrow to RecordingPayload | ConversationPayload via
+  // discrimination on `type` below.
+  const { data: subRow, error: subError } = await client
+    .from('submissions')
+    .select(
+      'id, learner_id, module_id, type, attempt_num, status, created_at, reviewed_at, reviewed_by, payload'
+    )
+    .eq('id', submissionId)
+    .maybeSingle();
+
+  if (subError) {
+    throw new Error(
+      `getSubmission(${submissionId}): failed to load submission: ${subError.message}`
+    );
+  }
+  if (!subRow) {
+    throw new Error(`getSubmission(${submissionId}): submission not found`);
+  }
+
+  // Load the learner row (header display: name, cohort, level, externalId).
+  // submissionCount + latestActivityAt are not needed on this surface — set
+  // safe defaults so the LearnerRow contract is satisfied.
+  const { data: learnerRow, error: learnerError } = await client
+    .from('learners')
+    .select('id, name, cohort, external_id')
+    .eq('id', subRow.learner_id as string)
+    .maybeSingle();
+
+  if (learnerError) {
+    throw new Error(
+      `getSubmission(${submissionId}): failed to load learner: ${learnerError.message}`
+    );
+  }
+  if (!learnerRow) {
+    throw new Error(
+      `getSubmission(${submissionId}): learner not found for submission`
+    );
+  }
+
+  // Resolve the module from the catalog (LRN-02 / SPK-01 / CNV-01 — header).
+  const moduleDef = getModule(subRow.module_id as string);
+  if (!moduleDef) {
+    throw new Error(
+      `getSubmission(${submissionId}): module ${subRow.module_id} is not in the catalog`
+    );
+  }
+
+  // Type-narrow + sign audio URL conditionally (D-10 / SPK-06 graceful degrade).
+  // For conversation submissions there is no audio. For recording submissions
+  // missing audioPath OR a sign failure leaves signedAudioUrl undefined; the
+  // UI then renders the brand-cream "Audio unavailable" notice but transcript
+  // and tips still render.
+  const submissionType = subRow.type as ModuleType;
+  const payload = subRow.payload as SubmissionPayload;
+
+  let signedAudioUrl: SubmissionDetail['signedAudioUrl'] = undefined;
+  if (submissionType === 'recording') {
+    const recordingPayload = payload as RecordingPayload;
+    if (recordingPayload.audioPath) {
+      try {
+        const { signedUrl, expiresAt } = await createSignedRecordingUrl(
+          recordingPayload.audioPath
+        );
+        signedAudioUrl = { url: signedUrl, expiresAt };
+      } catch (err) {
+        // D-10: graceful degrade — leave signedAudioUrl undefined; UI renders
+        // the brand-cream "Audio unavailable" notice. Transcript still renders.
+        console.error(
+          `getSubmission(${submissionId}): failed to sign audio URL:`,
+          err
+        );
+      }
+    }
+  }
+
+  const submission: SubmissionSummary = {
+    id: subRow.id as string,
+    learnerId: subRow.learner_id as string,
+    moduleId: subRow.module_id as string,
+    type: submissionType,
+    attemptNum: (subRow.attempt_num as number) as 1 | 2,
+    status: subRow.status as string,
+    submittedAt: subRow.created_at as string,
+    reviewedAt: (subRow.reviewed_at as string | null) ?? null,
+    reviewedBy: (subRow.reviewed_by as string | null) ?? null
+  };
+
+  const learner: LearnerRow = {
+    id: learnerRow.id as string,
+    name: learnerRow.name as string,
+    cohort: learnerRow.cohort as string,
+    level: undefined,
+    externalId: (learnerRow.external_id as string | null) ?? undefined,
+    submissionCount: 0,
+    latestActivityAt: null
+  };
+
+  return { submission, learner, module: moduleDef, payload, signedAudioUrl };
 }
