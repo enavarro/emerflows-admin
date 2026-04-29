@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 03-04-learner-detail-page-PLAN.md
-last_updated: "2026-04-29T12:28:12.748Z"
+stopped_at: Completed 03-05-submission-viewer-speaking-PLAN.md
+last_updated: "2026-04-29T12:37:02.968Z"
 last_activity: 2026-04-29
 progress:
   total_phases: 6
   completed_phases: 2
   total_plans: 16
-  completed_plans: 14
-  percent: 88
+  completed_plans: 15
+  percent: 94
 ---
 
 # Project State
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-04-25)
 ## Current Position
 
 Phase: 03 (learner-deep-dive-review) — EXECUTING
-Plan: 5 of 6
+Plan: 6 of 6
 Status: Ready to execute
 Last activity: 2026-04-29
 
@@ -62,6 +62,7 @@ Progress: [██▌░░░░░░░] 25% (1 of 4 phases)
 | Phase 03 P02 | 2min | 2 tasks | 3 files |
 | Phase 03 P03 | 2min | 1 tasks | 1 files |
 | Phase 03 P04 | 3min | 2 tasks | 3 files |
+| Phase 03 P05-submission-viewer-speaking | 4min | 3 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -82,6 +83,7 @@ Recent decisions affecting current work:
 - [Phase 03]: Plan 03-02: Mark-reviewed route + mutation. Used user-session Supabase client (D-04a) — auth.uid() flows naturally as reviewed_by. Defense-in-depth requireAdmin() at handler entry. Sibling service-client.ts preserves service.ts server-only purity. Mutation invalidates teachKeys.all (REV-02 cascade).
 - [Phase 03]: [Phase 03]: Plan 03-03: Icon registry extension. Used IconArrowBackUp for undo (semantically correct). Added two pure aliases (messageSquare, sparkle) so consumer JSX matches UI-SPEC verbatim. Pre-existing aliases (spinner, forms) cover the rest of UI-SPEC's icon needs.
 - [Phase 03]: Plan 03-04: Learner detail RSC route uses fetchQuery (not prefetchQuery) to propagate errors AND pre-resolve learner.name into PageContainer header — same QueryClient is then dehydrated for HydrationBoundary so client useSuspenseQuery resolves synchronously without a second fetch
+- [Phase 03]: Plan 03-05: Submission viewer route + speaking variant. fetchQuery pre-resolution binds learner.name + module label + attempt to PageContainer header (no flash). submission-viewer.tsx is a thin client router branching on submission.type — isolation point for Plan 06's conversation viewer to swap in. Native <audio controls> per D-02 (no waveform). D-10 audio fallback: brand-cream notice replaces audio Card while transcript still renders. Tips fixed-order grouping (pronunciation→delivery), empty groups skipped, entire Card omitted when tips[] empty. Stub-then-replace coordination: ships mark-reviewed-button + submission-viewer-conversation as stubs Plan 06 overwrites in place.
 
 ### Pending Todos
 
@@ -101,6 +103,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-29T12:28:12.745Z
-Stopped at: Completed 03-04-learner-detail-page-PLAN.md
+Last session: 2026-04-29T12:37:02.966Z
+Stopped at: Completed 03-05-submission-viewer-speaking-PLAN.md
 Resume file: None
