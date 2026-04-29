@@ -28,25 +28,25 @@
 
 ### Learner Detail
 
-- [ ] **LRN-01**: Admin opens `/dashboard/teach/cohorts/[cohort]/learners/[learnerId]` and sees the learner's profile summary (name, cohort, level, external_id when present)
-- [ ] **LRN-02**: Learner page lists submissions grouped by module, sorted by module number, with badges for type (`speaking` / `conversation`), attempt number, status, submitted-at, and reviewed state
-- [ ] **LRN-03**: Each submission row links to the submission viewer with the submission id
+- [x] **LRN-01**: Admin opens `/dashboard/teach/cohorts/[cohort]/learners/[learnerId]` and sees the learner's profile summary (name, cohort, level, external_id when present)
+- [x] **LRN-02**: Learner page lists submissions grouped by module, sorted by module number, with badges for type (`speaking` / `conversation`), attempt number, status, submitted-at, and reviewed state
+- [x] **LRN-03**: Each submission row links to the submission viewer with the submission id
 
 ### Submission Viewer — Speaking (recording)
 
-- [ ] **SPK-01**: Speaking viewer at `/dashboard/teach/submissions/[id]` (type=`recording`) shows learner + module + attempt header
-- [ ] **SPK-02**: Audio player streams the recording via a server-issued signed URL (TTL ≤ 5 minutes) from the private `recordings` bucket; path resolved from `payload.audioPath` or derived from `recordings/<cohort>/<learner-uuid>/module-XX-attempt-N.webm`
-- [ ] **SPK-03**: Transcript renders one block per `recordingTranscript` entry, color-coded by `classification` (`strong` = sage; `needs improvement` = amber) per the project's transcript color rules
-- [ ] **SPK-04**: Per-word pronunciation hints from `recordingTranscript[].words[]` are surfaced on hover/inline next to the relevant word
-- [ ] **SPK-05**: AI coaching tips render grouped by `category` (`pronunciation`, `delivery`) with the tip text rendered as readable prose
-- [ ] **SPK-06**: Viewer handles missing `audioPath` gracefully (show "audio unavailable" message; transcript still renders)
+- [x] **SPK-01**: Speaking viewer at `/dashboard/teach/submissions/[id]` (type=`recording`) shows learner + module + attempt header
+- [x] **SPK-02**: Audio player streams the recording via a server-issued signed URL (TTL ≤ 5 minutes) from the private `recordings` bucket; path resolved from `payload.audioPath` or derived from `recordings/<cohort>/<learner-uuid>/module-XX-attempt-N.webm`
+- [x] **SPK-03**: Transcript renders one block per `recordingTranscript` entry, color-coded by `classification` (`strong` = sage; `needs improvement` = amber) per the project's transcript color rules
+- [x] **SPK-04**: Per-word pronunciation hints from `recordingTranscript[].words[]` are surfaced on hover/inline next to the relevant word
+- [x] **SPK-05**: AI coaching tips render grouped by `category` (`pronunciation`, `delivery`) with the tip text rendered as readable prose
+- [x] **SPK-06**: Viewer handles missing `audioPath` gracefully (show "audio unavailable" message; transcript still renders)
 
 ### Submission Viewer — Conversation
 
-- [ ] **CNV-01**: Conversation viewer at `/dashboard/teach/submissions/[id]` (type=`conversation`) shows learner + module + attempt header
-- [ ] **CNV-02**: Polished introduction (`payload.introduction`) renders in a "polished version" callout, visually distinct from raw answers
-- [ ] **CNV-03**: Q&A pairs render in order, each showing the question, the learner's answer, and any inline flags (`{word, issue, suggestion}`) highlighting the flagged span
-- [ ] **CNV-04**: Exercise summary (`payload.exerciseSummary`) renders in a clearly labeled summary card at the bottom
+- [x] **CNV-01**: Conversation viewer at `/dashboard/teach/submissions/[id]` (type=`conversation`) shows learner + module + attempt header
+- [x] **CNV-02**: Polished introduction (`payload.introduction`) renders in a "polished version" callout, visually distinct from raw answers
+- [x] **CNV-03**: Q&A pairs render in order, each showing the question, the learner's answer, and any inline flags (`{word, issue, suggestion}`) highlighting the flagged span
+- [x] **CNV-04**: Exercise summary (`payload.exerciseSummary`) renders in a clearly labeled summary card at the bottom
 
 ### Review Action
 
@@ -124,19 +124,19 @@ Deferred to future milestones; tracked but not in current roadmap.
 | COD-02 | Phase 2 | Complete |
 | COD-03 | Phase 2 | Complete |
 | COD-04 | Phase 2 | Complete |
-| LRN-01 | Phase 3 | Pending |
-| LRN-02 | Phase 3 | Pending |
-| LRN-03 | Phase 3 | Pending |
-| SPK-01 | Phase 3 | Pending |
-| SPK-02 | Phase 3 | Pending |
-| SPK-03 | Phase 3 | Pending |
-| SPK-04 | Phase 3 | Pending |
-| SPK-05 | Phase 3 | Pending |
-| SPK-06 | Phase 3 | Pending |
-| CNV-01 | Phase 3 | Pending |
-| CNV-02 | Phase 3 | Pending |
-| CNV-03 | Phase 3 | Pending |
-| CNV-04 | Phase 3 | Pending |
+| LRN-01 | Phase 3 | Complete |
+| LRN-02 | Phase 3 | Complete |
+| LRN-03 | Phase 3 | Complete |
+| SPK-01 | Phase 3 | Complete |
+| SPK-02 | Phase 3 | Complete |
+| SPK-03 | Phase 3 | Complete |
+| SPK-04 | Phase 3 | Complete |
+| SPK-05 | Phase 3 | Complete |
+| SPK-06 | Phase 3 | Complete |
+| CNV-01 | Phase 3 | Complete |
+| CNV-02 | Phase 3 | Complete |
+| CNV-03 | Phase 3 | Complete |
+| CNV-04 | Phase 3 | Complete |
 | REV-01 | Phase 3 | Pending |
 | REV-02 | Phase 3 | Pending |
 | REV-03 | Phase 3 | Pending |

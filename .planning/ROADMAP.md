@@ -76,7 +76,13 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. Opening a `conversation` submission renders the conversation viewer with the polished introduction in a visually distinct callout, ordered Q&A pairs with inline `{word, issue, suggestion}` flags highlighting the flagged span, and a clearly labeled exercise-summary card at the bottom.
   4. Clicking "Mark as reviewed" on either viewer writes `reviewed_at = now()` / `reviewed_by = auth.uid()` to the submission, invalidates React Query caches so the cohort matrix and learner list reflect the new state on next view, and replaces the button with "Reviewed by <admin> on <date>" plus an "Undo review" affordance that clears both columns.
   5. The review mutation uses `useMutation` with the same patterns as `src/features/demos/` (key-factory invalidation, toast on success/error).
-**Plans**: TBD
+**Plans**: 6 plans
+- [ ] 03-01-PLAN.md (Wave 1) — Implement getLearner + getSubmission service bodies (LRN-*, SPK-*, CNV-* data layer) [LRN-01, LRN-02, LRN-03, SPK-01, SPK-02, SPK-03, SPK-04, SPK-05, SPK-06, CNV-01, CNV-02, CNV-03, CNV-04]
+- [ ] 03-02-PLAN.md (Wave 1) — POST /api/teach/submissions/[id]/review route + service-client + markReviewedMutation [REV-01, REV-02, REV-04]
+- [ ] 03-03-PLAN.md (Wave 1) — Extend Icons registry (mic, sparkle alias, messageSquare alias, fileX, undo) []
+- [ ] 03-04-PLAN.md (Wave 2) — Learner detail page (route + error.tsx + cards-per-module client component) [LRN-01, LRN-02, LRN-03]
+- [ ] 03-05-PLAN.md (Wave 2) — Submission viewer route + speaking viewer (audio + transcript + tips) [SPK-01, SPK-02, SPK-03, SPK-04, SPK-05, SPK-06]
+- [ ] 03-06-PLAN.md (Wave 2) — Conversation viewer + mark-reviewed control (CNV-* + REV-03 UI) [CNV-01, CNV-02, CNV-03, CNV-04, REV-03]
 **UI hint**: yes
 
 ### Phase 4: Visual Fidelity & Verification
@@ -100,7 +106,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 |-------|----------------|--------|-----------|
 | 1. Foundations | 0/5 | Not started | - |
 | 2. Cohorts Hub | 0/TBD | Not started | - |
-| 3. Learner Deep-Dive & Review | 0/TBD | Not started | - |
+| 3. Learner Deep-Dive & Review | 0/6 | Not started | - |
 | 4. Visual Fidelity & Verification | 0/TBD | Not started | - |
 
 ## Backlog
