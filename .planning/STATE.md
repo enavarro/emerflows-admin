@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executing
-stopped_at: Completed 03-05-submission-viewer-speaking-PLAN.md
-last_updated: "2026-04-29T12:37:02.968Z"
+status: verifying
+stopped_at: Completed 03-06-conversation-viewer-and-mark-reviewed-PLAN.md
+last_updated: "2026-04-29T12:43:47.504Z"
 last_activity: 2026-04-29
 progress:
   total_phases: 6
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 16
-  completed_plans: 15
-  percent: 94
+  completed_plans: 16
+  percent: 100
 ---
 
 # Project State
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-04-25)
 
 Phase: 03 (learner-deep-dive-review) — EXECUTING
 Plan: 6 of 6
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-04-29
 
 Progress: [██▌░░░░░░░] 25% (1 of 4 phases)
@@ -63,6 +63,7 @@ Progress: [██▌░░░░░░░] 25% (1 of 4 phases)
 | Phase 03 P03 | 2min | 1 tasks | 1 files |
 | Phase 03 P04 | 3min | 2 tasks | 3 files |
 | Phase 03 P05-submission-viewer-speaking | 4min | 3 tasks | 9 files |
+| Phase 03 P06-conversation-viewer-and-mark-reviewed | 4min | 3 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -84,6 +85,7 @@ Recent decisions affecting current work:
 - [Phase 03]: [Phase 03]: Plan 03-03: Icon registry extension. Used IconArrowBackUp for undo (semantically correct). Added two pure aliases (messageSquare, sparkle) so consumer JSX matches UI-SPEC verbatim. Pre-existing aliases (spinner, forms) cover the rest of UI-SPEC's icon needs.
 - [Phase 03]: Plan 03-04: Learner detail RSC route uses fetchQuery (not prefetchQuery) to propagate errors AND pre-resolve learner.name into PageContainer header — same QueryClient is then dehydrated for HydrationBoundary so client useSuspenseQuery resolves synchronously without a second fetch
 - [Phase 03]: Plan 03-05: Submission viewer route + speaking variant. fetchQuery pre-resolution binds learner.name + module label + attempt to PageContainer header (no flash). submission-viewer.tsx is a thin client router branching on submission.type — isolation point for Plan 06's conversation viewer to swap in. Native <audio controls> per D-02 (no waveform). D-10 audio fallback: brand-cream notice replaces audio Card while transcript still renders. Tips fixed-order grouping (pronunciation→delivery), empty groups skipped, entire Card omitted when tips[] empty. Stub-then-replace coordination: ships mark-reviewed-button + submission-viewer-conversation as stubs Plan 06 overwrites in place.
+- [Phase 03]: Plan 03-06: Conversation viewer composes PolishedIntroCallout + Q&A divide-y stack + Exercise Summary; QAPair uses splitAnswer (left-to-right indexOf with cursor) for inline flag highlighting via click-Popover; MarkReviewedButton three states wired via useMutation onSuccess/onError + sonner toasts; D-06 generic instructor label + D-07 instant undo honored. Phase 3 surface complete.
 
 ### Pending Todos
 
@@ -103,6 +105,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-29T12:37:02.966Z
-Stopped at: Completed 03-05-submission-viewer-speaking-PLAN.md
+Last session: 2026-04-29T12:43:47.502Z
+Stopped at: Completed 03-06-conversation-viewer-and-mark-reviewed-PLAN.md
 Resume file: None
