@@ -50,10 +50,10 @@
 
 ### Review Action
 
-- [ ] **REV-01**: Each submission viewer has a "Mark as reviewed" button (admin only); clicking it sets `reviewed_at = now()` and `reviewed_by = auth.uid()` on `submissions`
-- [ ] **REV-02**: After a successful mark-reviewed, the React Query cache invalidates so the cohort matrix and learner submission list reflect the new state on next view
+- [x] **REV-01**: Each submission viewer has a "Mark as reviewed" button (admin only); clicking it sets `reviewed_at = now()` and `reviewed_by = auth.uid()` on `submissions`
+- [x] **REV-02**: After a successful mark-reviewed, the React Query cache invalidates so the cohort matrix and learner submission list reflect the new state on next view
 - [ ] **REV-03**: When already reviewed, the button is replaced by a "Reviewed by <admin> on <date>" indicator and an "Undo review" affordance (clears both columns)
-- [ ] **REV-04**: Mutation uses `useMutation` and TanStack patterns consistent with `src/features/demos/`
+- [x] **REV-04**: Mutation uses `useMutation` and TanStack patterns consistent with `src/features/demos/`
 
 ### Visual Fidelity & Polish
 
@@ -137,10 +137,10 @@ Deferred to future milestones; tracked but not in current roadmap.
 | CNV-02 | Phase 3 | Complete |
 | CNV-03 | Phase 3 | Complete |
 | CNV-04 | Phase 3 | Complete |
-| REV-01 | Phase 3 | Pending |
-| REV-02 | Phase 3 | Pending |
+| REV-01 | Phase 3 | Complete |
+| REV-02 | Phase 3 | Complete |
 | REV-03 | Phase 3 | Pending |
-| REV-04 | Phase 3 | Pending |
+| REV-04 | Phase 3 | Complete |
 | VIS-01 | Phase 4 | Pending |
 | VIS-02 | Phase 4 | Pending |
 | VIS-03 | Phase 4 | Pending |
