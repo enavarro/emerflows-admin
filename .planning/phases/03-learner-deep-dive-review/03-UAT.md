@@ -1,5 +1,5 @@
 ---
-status: partial
+status: diagnosed
 phase: 03-learner-deep-dive-review
 source:
   - 03-01-service-and-queries-SUMMARY.md
@@ -81,33 +81,84 @@ blocked: 2
 ## Gaps
 
 - truth: "POST /api/teach/submissions/[id]/review returns 200 with the updated submission row when an admin clicks Mark as reviewed; it does not throw a 500 with 'Cannot coerce the result to a single JSON object'."
-  status: failed
-  reason: "User reported: 500 Internal Server Error with body {\"error\":\"Cannot coerce the result to a single JSON object\"} when clicking Mark as reviewed on submission 14300bd3-e77f-44d1-8384-7dc06dbecf94. This is the canonical Supabase signal for `.single()` against a 0-row UPDATE return — RLS, column-level GRANT, or session-user policy is filtering the returning rows. Likely fix: investigate RLS USING(is_admin()) for the user-session client + GRANT(reviewed_at, reviewed_by) policy + verify user IS admin via profiles role check at write time."
+  status: diagnosed
+  reason: "User reported: 500 Internal Server Error with body {\"error\":\"Cannot coerce the result to a single JSON object\"} when clicking Mark as reviewed on submission 14300bd3-e77f-44d1-8384-7dc06dbecf94."
   severity: blocker
   test: 7
-  artifacts: ["src/app/api/teach/submissions/[id]/review/route.ts", "supabase/migrations/00010_add_submissions_review_columns.sql", "supabase/migrations/00012_fix_profiles_rls_select_policy.sql"]
-  missing: []
+  root_cause: "submissions table has RLS enabled (00010:20) but NO `FOR SELECT` policy exists for the authenticated role. The route's `.update().select().single()` chain executes UPDATE...RETURNING, whose returned rows must pass the SELECT RLS policy. With no SELECT policy, RETURNING yields 0 rows and `.single()` throws PGRST116 — exactly the error message reported. Every read in service.ts uses createAdminClient (bypasses RLS), which is why the viewer loads but this route — the only authenticated-role read of submissions — fails."
+  artifacts:
+    - path: "supabase/migrations/00010_add_submissions_review_columns.sql"
+      issue: "Enables RLS on submissions (line 20), but only an UPDATE policy is created — no FOR SELECT policy ever defined for authenticated role"
+    - path: "supabase/migrations/00011_fix_submissions_admin_column_grants.sql"
+      issue: "Defines submissions_admin_review_update (UPDATE only); SELECT gap unaddressed"
+    - path: "src/app/api/teach/submissions/[id]/review/route.ts:56-61"
+      issue: ".update().select().single() pattern triggers UPDATE...RETURNING that must pass SELECT RLS"
+  missing:
+    - "New migration 00013_add_submissions_admin_select_policy.sql creating: CREATE POLICY submissions_admin_select ON public.submissions FOR SELECT TO authenticated USING (public.is_admin());"
+    - "Apply migration to live Supabase project"
+    - "Verify mark-reviewed POST returns 200 with updated row"
+  debug_session: .planning/debug/mark-reviewed-500.md
 
 - truth: "From a submission viewer (recording or conversation) for a given learner+module, the user can switch to the OTHER submission type for the same module without bouncing back to the learner page."
-  status: failed
+  status: diagnosed
   reason: "User reported: 'when we are viewing one of the conversation I cannot go back or I cannot see the other... within one module, you enter the module and then you are able to flick back between the conversation and recording if they are available there.' No intra-module submission switcher exists on the viewer."
   severity: major
   test: 1
-  artifacts: []
-  missing: []
+  root_cause: "Feature gap — Phase 03 was scoped per UI-SPEC §D-01 ('single-type body, no tabs') to a viewer that renders only the active submission. The viewer never queries for siblings and the RSC route does not prefetch the learner detail. Data needed already exists: getLearner().submissionsByModule[moduleId] yields every sibling — no new endpoint required."
+  artifacts:
+    - path: "src/features/teach/components/submission-viewer.tsx"
+      issue: "Type-branching client router; no sibling fetch, no switcher"
+    - path: "src/app/dashboard/teach/submissions/[id]/page.tsx"
+      issue: "RSC route does not prefetch learnerQueryOptions(submission.learnerId)"
+    - path: "src/features/teach/api/service.ts (getLearner lines 314-410)"
+      issue: "Already aggregates submissionsByModule — UI just doesn't read it on viewer"
+  missing:
+    - "Prefetch teachKeys.learner(submission.learnerId) in submission viewer RSC route"
+    - "New component sibling-type-switcher.tsx (ToggleGroup or Link-row) — hide when only one type exists"
+    - "Render switcher above the type-branched body in submission-viewer.tsx (NOT in pageHeaderAction — already crowded)"
+  debug_session: .planning/debug/missing-intra-module-switcher.md
 
 - truth: "The submission viewer renders breadcrumbs that let the user navigate back up the hierarchy: Cohorts → <cohort> → <learner> → current submission. Also surfaces on the learner page back to Cohorts → <cohort>."
-  status: failed
+  status: diagnosed
   reason: "User reported: 'it should be on the navigation and the breadcrumbs as well to go back to see all the models submitted by the learner as well... if they are not available, but they should be on breadcrumbs to go back.' No breadcrumbs are rendered today on the viewer or learner page."
   severity: major
   test: 1
-  artifacts: []
-  missing: []
+  root_cause: "Feature gap — Phase 3 scope did not include breadcrumbs for any teach route. shadcn Breadcrumb primitive AND a global <Breadcrumbs /> consumer exist (rendered in dashboard <Header>), but useBreadcrumbs() routeMapping has no entries for /dashboard/teach/* and no mechanism to surface route-resolved labels (cohort name, learner name, module title). Result: a path-segmenting fallback shows raw uuids/slugs."
+  artifacts:
+    - path: "src/components/ui/breadcrumb.tsx"
+      issue: "Primitive present and unused on teach routes"
+    - path: "src/components/breadcrumbs.tsx + src/components/layout/header.tsx:16"
+      issue: "Global Breadcrumbs rendered in Header but useBreadcrumbs has hardcoded routeMapping (no teach routes), can't read dynamic labels"
+    - path: "src/components/layout/page-container.tsx"
+      issue: "No breadcrumb slot today"
+    - path: "all 4 teach route page.tsx files"
+      issue: "Pre-resolve learner.name, module.title, cohort label server-side already; just need to pass into a breadcrumb"
+  missing:
+    - "Add optional pageBreadcrumbs?: ReactNode slot to PageContainer"
+    - "New TeachBreadcrumbs server component taking { label, href? }[]"
+    - "Each teach route's page.tsx constructs its breadcrumb items from pre-resolved data"
+    - "Hide global header <Breadcrumbs /> on /dashboard/teach/* paths to avoid double-application"
+    - "Wire link shapes: Cohorts → /dashboard/teach/cohorts; Cohort → /.../cohorts/<learner.cohort>; Learner → /.../learners/<learner.id>; current = unlinked BreadcrumbPage"
+  debug_session: .planning/debug/missing-breadcrumbs.md
 
 - truth: "The 'Teach / Cohorts' entry in the sidebar consistently appears for admin users across all dashboard pages and after any auth/profile refresh."
-  status: failed
-  reason: "User reported: 'on the main menu in the sidebar at some point it was not displaying the cohort section.' Intermittent — needs reproduction; likely RBAC nav filter race or auth/profile stale state."
+  status: diagnosed
+  reason: "User reported: 'on the main menu in the sidebar at some point it was not displaying the cohort section.' Intermittent — needs reproduction."
   severity: major
   test: 1
-  artifacts: []
-  missing: []
+  root_cause: "Same bug as resolved session phase01-teach-nav-broken.md (2026-04-25). Two compounding layers: (a) recursive RLS policy on profiles caused useAuth() to fail with 'infinite recursion detected', leaving profile=null so useFilteredNavGroups strips the admin-gated Teach group; (b) React StrictMode double-effect aborted supabase.auth.getUser() in pre-fix use-auth.ts. THE FIX WAS ALREADY AUTHORED ON 2026-04-25 BUT NEVER COMMITTED — it currently lives only in the working tree (M src/hooks/use-auth.ts + ?? supabase/migrations/00012_fix_profiles_rls_select_policy.sql)."
+  artifacts:
+    - path: "src/hooks/use-auth.ts"
+      issue: "Fix exists in working tree (getSession + cancelled flag + try/catch) but never committed; HEAD version still uses abort-prone getUser()"
+    - path: "supabase/migrations/00012_fix_profiles_rls_select_policy.sql"
+      issue: "Untracked file (?? in git status); migration was applied to live DB on 2026-04-25 but never git-add-ed"
+    - path: "src/hooks/use-nav.ts:14"
+      issue: "By-design admin filter that strips Teach when profile=null — surfaces symptom whenever auth race occurs"
+    - path: "tests/e2e/teach-nav.spec.ts + playwright.config.ts"
+      issue: "Untracked Playwright regression suite (3/3 pass) — should ship with the fix"
+  missing:
+    - "git add and commit src/hooks/use-auth.ts + supabase/migrations/00012_fix_profiles_rls_select_policy.sql"
+    - "Optionally also commit tests/e2e/teach-nav.spec.ts and playwright.config.ts"
+    - "Verify post-commit by running npx playwright test tests/e2e/teach-nav.spec.ts (expect 3/3 pass)"
+    - "No new code required — the fix is fully authored, just needs to be in git"
+  debug_session: .planning/debug/sidebar-teach-intermittent.md
