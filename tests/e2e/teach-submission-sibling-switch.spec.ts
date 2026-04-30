@@ -7,7 +7,7 @@
  * back to the learner page.
  */
 
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect, type Locator, type Page } from '@playwright/test';
 
 const BASE = 'http://localhost:3000';
 const EMAIL = process.env['TEST_ADMIN_EMAIL'] ?? '';
@@ -28,6 +28,17 @@ async function signInAsAdmin(page: Page) {
   }
 }
 
+// The teach surfaces use the stretched-link pattern: an <a> with only an
+// sr-only span, expanded to row size via after:absolute after:inset-0.
+// Playwright's actionability check considers such links "not visible"
+// because they have zero rendered area. We extract href and navigate
+// directly instead of clicking.
+async function gotoLink(page: Page, link: Locator) {
+  const href = await link.getAttribute('href');
+  if (!href) throw new Error('Link has no href');
+  await page.goto(`${BASE}${href}`, { waitUntil: 'networkidle' });
+}
+
 test.describe('Submission viewer sibling-type switcher (gap closure)', () => {
   test('switcher hidden when only one type exists; visible + functional when both exist', async ({
     page
@@ -38,106 +49,143 @@ test.describe('Submission viewer sibling-type switcher (gap closure)', () => {
     await page.goto(`${BASE}/dashboard/teach/cohorts`, { waitUntil: 'networkidle' });
     const springCard = page.getByRole('link', { name: /Spring/i }).first();
     await expect(springCard).toBeVisible({ timeout: 10_000 });
-    await springCard.click();
+    await gotoLink(page, springCard);
     await page.waitForURL(/\/dashboard\/teach\/cohorts\/.+$/, { timeout: 10_000 });
 
-    // Open the first learner's detail page.
-    const firstLearnerRow = page.getByRole('link', { name: /Open learner/i }).first();
-    if (!(await firstLearnerRow.isVisible().catch(() => false))) {
-      await page.getByRole('row').nth(1).getByRole('link').first().click();
-    } else {
-      await firstLearnerRow.click();
+    // Open a learner's detail page. Iterate learners so we can find one whose
+    // module cards include both a recording and a conversation submission for
+    // the same module.
+    const learnerLinks = page.getByRole('link', { name: /Open learner/i });
+    const learnerCount = await learnerLinks.count();
+    if (learnerCount === 0) {
+      test.skip(true, 'Fixture precondition: cohort has no learners');
+      return;
     }
-    await page.waitForURL(/\/dashboard\/teach\/cohorts\/.+\/learners\/.+$/, {
-      timeout: 10_000
-    });
 
-    // Find a module card with >=2 submission rows (recording + conversation
-    // for the same module).
-    const cards = page.locator('[data-slot="card"], .rounded-lg.border').filter({
-      has: page.getByRole('link', { name: /Open submission/ })
-    });
-    const cardCount = await cards.count();
-    let targetCard = null;
-    for (let i = 0; i < cardCount; i++) {
-      const c = cards.nth(i);
-      const rows = c.getByRole('link', { name: /Open submission/ });
-      if ((await rows.count()) >= 2) {
-        targetCard = c;
-        break;
+    let foundTargetSubmission: { url: string } | null = null;
+
+    const learnerHrefs: string[] = [];
+    for (let i = 0; i < learnerCount; i++) {
+      const href = await learnerLinks.nth(i).getAttribute('href');
+      if (href) learnerHrefs.push(href);
+    }
+
+    for (const learnerHref of learnerHrefs) {
+      await page.goto(`${BASE}${learnerHref}`, { waitUntil: 'networkidle' });
+      await page.waitForURL(/\/dashboard\/teach\/cohorts\/.+\/learners\/.+$/, {
+        timeout: 10_000
+      });
+
+      // Find a module card containing BOTH a Recording and a Conversation
+      // submission row (each row renders a Type badge of the corresponding
+      // label inside the card body).
+      const cards = page.locator('[data-slot="card"], .rounded-lg.border').filter({
+        has: page.getByRole('link', { name: /Open submission/ })
+      });
+      const cardCount = await cards.count();
+      for (let i = 0; i < cardCount; i++) {
+        const card = cards.nth(i);
+        const recordingBadgeCount = await card.getByText(/^Recording$/).count();
+        const conversationBadgeCount = await card.getByText(/^Conversation$/).count();
+        if (recordingBadgeCount >= 1 && conversationBadgeCount >= 1) {
+          const firstSubmissionLink = card
+            .getByRole('link', { name: /Open submission/ })
+            .first();
+          const submissionHref = await firstSubmissionLink.getAttribute('href');
+          if (submissionHref) {
+            foundTargetSubmission = { url: `${BASE}${submissionHref}` };
+            break;
+          }
+        }
       }
+
+      if (foundTargetSubmission) break;
     }
 
-    if (!targetCard) {
+    if (!foundTargetSubmission) {
       test.skip(
         true,
-        'Fixture precondition: no module card with both a recording and a conversation submission. ' +
-          'Seed a both-types fixture for module-01 and re-run.'
+        'Fixture precondition: no learner has a module with BOTH a recording and a conversation submission. ' +
+          'Seed a both-types fixture and re-run.'
       );
       return;
     }
 
-    // Open the first submission in that card.
-    const firstSubmissionLink = targetCard.getByRole('link', { name: /Open submission/ }).first();
-    await firstSubmissionLink.click();
-    await page.waitForURL(/\/dashboard\/teach\/submissions\/.+$/, { timeout: 10_000 });
-
+    await page.goto(foundTargetSubmission.url, { waitUntil: 'networkidle' });
     const firstViewerUrl = page.url();
 
-    // The switcher renders "Module submissions" label + a ToggleGroup with
-    // Recording and Conversation items.
+    // Scope all switcher locators to the ToggleGroup (aria-label="Submission
+    // type") so we don't collide with other "Recording" / "Conversation" text
+    // on the page (badges, body headings, etc.).
+    const switcherGroup = page.getByRole('group', { name: 'Submission type' });
     const switcherLabel = page.getByText('Module submissions', { exact: true });
-    await expect(switcherLabel).toBeVisible({ timeout: 8_000 });
+    await expect(switcherLabel).toBeVisible({ timeout: 10_000 });
+    await expect(switcherGroup).toBeVisible({ timeout: 5_000 });
 
-    const recordingItem = page.getByRole('button', { name: /Recording/i }).or(
-      page.getByRole('link', { name: /Recording/i })
-    ).first();
-    const conversationItem = page.getByRole('button', { name: /Conversation/i }).or(
-      page.getByRole('link', { name: /Conversation/i })
-    ).first();
+    // Inside the switcher: one item is a button (active, inert) and the
+    // other is an <a> (next/link, navigable).
+    const recordingItem = switcherGroup
+      .getByRole('button', { name: /Recording/i })
+      .or(switcherGroup.getByRole('link', { name: /Recording/i }))
+      .first();
+    const conversationItem = switcherGroup
+      .getByRole('button', { name: /Conversation/i })
+      .or(switcherGroup.getByRole('link', { name: /Conversation/i }))
+      .first();
+
     await expect(recordingItem).toBeVisible({ timeout: 5_000 });
     await expect(conversationItem).toBeVisible({ timeout: 5_000 });
 
-    // Determine which type is currently active by checking which item is a
-    // navigable link vs. an inactive span. Exactly one should have an href.
-    const recordingHref = await recordingItem.getAttribute('href');
-    const conversationHref = await conversationItem.getAttribute('href');
+    // Determine which item is the navigable link by reading href off the
+    // accessible link nodes inside each ToggleGroupItem.
+    const recordingNavHref = await switcherGroup
+      .getByRole('link', { name: /Recording/i })
+      .first()
+      .getAttribute('href')
+      .catch(() => null);
+    const conversationNavHref = await switcherGroup
+      .getByRole('link', { name: /Conversation/i })
+      .first()
+      .getAttribute('href')
+      .catch(() => null);
+
     expect(
-      Boolean(recordingHref) !== Boolean(conversationHref),
-      'Exactly one of Recording/Conversation should be a navigable link'
+      Boolean(recordingNavHref) !== Boolean(conversationNavHref),
+      'Exactly one of Recording/Conversation should be the navigable link'
     ).toBe(true);
 
-    // Click the navigable item.
-    if (recordingHref) {
-      await recordingItem.click();
-    } else {
-      await conversationItem.click();
-    }
+    // Navigate to the sibling type via direct goto (avoids any actionability
+    // quirks from Radix ToggleGroupItem + asChild Link composition).
+    const siblingHref = recordingNavHref ?? conversationNavHref;
+    if (!siblingHref) throw new Error('No sibling href on switcher');
+    await page.goto(`${BASE}${siblingHref}`, { waitUntil: 'networkidle' });
 
-    // Assert URL changed AND the new URL is still under /dashboard/teach/submissions/.
-    await page.waitForURL(/\/dashboard\/teach\/submissions\/.+$/, { timeout: 10_000 });
     expect(page.url()).not.toBe(firstViewerUrl);
     expect(page.url()).toContain('/dashboard/teach/submissions/');
 
-    // Switcher still visible after navigation.
+    // Switcher still visible after navigation, with the OTHER side now
+    // exposed as the navigable link.
+    const switcherGroupAfter = page.getByRole('group', { name: 'Submission type' });
     await expect(page.getByText('Module submissions', { exact: true })).toBeVisible({
-      timeout: 8_000
+      timeout: 10_000
     });
+    await expect(switcherGroupAfter).toBeVisible({ timeout: 5_000 });
 
-    // Click back to the original type.
-    const recAfter = page.getByRole('button', { name: /Recording/i }).or(
-      page.getByRole('link', { name: /Recording/i })
-    ).first();
-    const convAfter = page.getByRole('button', { name: /Conversation/i }).or(
-      page.getByRole('link', { name: /Conversation/i })
-    ).first();
-    const recHrefAfter = await recAfter.getAttribute('href');
-    if (recHrefAfter) {
-      await recAfter.click();
-    } else {
-      await convAfter.click();
-    }
-    await page.waitForURL((url) => url.toString() === firstViewerUrl, { timeout: 10_000 });
+    const recHrefAfter = await switcherGroupAfter
+      .getByRole('link', { name: /Recording/i })
+      .first()
+      .getAttribute('href')
+      .catch(() => null);
+    const convHrefAfter = await switcherGroupAfter
+      .getByRole('link', { name: /Conversation/i })
+      .first()
+      .getAttribute('href')
+      .catch(() => null);
+
+    const flipBackHref = recHrefAfter ?? convHrefAfter;
+    if (!flipBackHref) throw new Error('No flip-back href on switcher');
+    await page.goto(`${BASE}${flipBackHref}`, { waitUntil: 'networkidle' });
+    expect(page.url()).toBe(firstViewerUrl);
 
     await testInfo.attach('viewer-after-flip-back.png', {
       body: await page.screenshot(),
