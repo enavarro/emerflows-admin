@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Emerflows · Educator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="teacher.css"/>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script src="teacher-data.js"></script>
+<script type="text/babel" src="tweaks-panel.jsx"></script>
+<script type="text/babel" src="teacher-list.jsx"></script>
+<script type="text/babel" src="teacher-detail.jsx"></script>
+<script type="text/babel" src="teacher-trends.jsx"></script>
+<script type="text/babel" src="teacher-admin.jsx"></script>
+
+<script type="text/babel" data-presets="react">
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "view": "admin",
+  "density": "regular",
+  "vizMode": "bars",
+  "showStats": true
+}/*EDITMODE-END*/;
+
+function App() {
+  const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
+  const [view, setView] = React.useState(t.view);
+  const [search, setSearch] = React.useState("");
+  const [openSub, setOpenSub] = React.useState(null);
+  const [vizMode, setVizMode] = React.useState(t.vizMode);
+  const [activeCohort, setActiveCohort] = React.useState("Spring 2026 · B1–B2");
+
+  // keep tweak-state and local-state synced
+  React.useEffect(() => { setView(t.view); }, [t.view]);
+  React.useEffect(() => { setVizMode(t.vizMode); }, [t.vizMode]);
+
+  const data = window.TD_DATA;
+  const counts = { newReviews: data.submissions.filter(s => s.status === "needs-review").length };
+
+  let crumbs = [];
+  let content;
+  if (openSub) {
+    const sub = data.featured;
+    crumbs = ["Teach", "Submissions", `${sub.student.name} · M${String(sub.module.num).padStart(2,"0")}`];
+    content = <SubmissionDetail data={data} subId={openSub} onBack={() => setOpenSub(null)}/>;
+  } else if (view === "admin") {
+    crumbs = ["Admin", "Emerflows School", "Cohorts"];
+    content = <AdminHub onEnterCohort={(c) => { setActiveCohort(c.name); setView("submissions"); setTweak("view", "submissions"); }}/>;
+  } else if (view === "submissions") {
+    crumbs = ["Teach", activeCohort, "Submissions"];
+    content = <SubmissionsView data={data} onOpen={setOpenSub} search={search}/>;
+  } else if (view === "trends") {
+    crumbs = ["Teach", activeCohort, "Class Trends"];
+    content = <TrendsView data={data} vizMode={vizMode} setVizMode={(v) => { setVizMode(v); setTweak("vizMode", v); }}/>;
+  } else {
+    crumbs = ["Teach", view];
+    content = <div className="page"><div className="page__head"><div><div className="kicker">Coming next</div><h1 className="page__title">{view[0].toUpperCase()+view.slice(1)}</h1><div className="page__sub">This surface isn't part of the current design exploration. The anchor screens are <b>Submissions</b>, <b>Submission detail</b>, and <b>Class Trends</b>.</div></div></div></div>;
+  }
+
+  return (
+    <>
+      <div className="app" data-screen-label={openSub ? "Submission Detail" : view === "trends" ? "Class Trends" : "Submissions"}>
+        <Sidebar view={view} setView={(v) => { setView(v); setTweak("view", v); setOpenSub(null); }} counts={counts}
+                 activeCohort={activeCohort}
+                 onChangeCohort={() => { setView("admin"); setTweak("view", "admin"); setOpenSub(null); }}/>
+        <main className="main">
+          <Topbar crumbs={crumbs} search={search} setSearch={setSearch}/>
+          {content}
+        </main>
+      </div>
+
+      <TweaksPanel title="Tweaks">
+        <TweakSection label="Screen"/>
+        <TweakRadio label="View" value={view}
+          options={[{value:"admin",label:"Admin"},{value:"submissions", label:"Inbox"},{value:"trends", label:"Trends"}]}
+          onChange={(v) => { setView(v); setTweak("view", v); setOpenSub(null); }}/>
+        <TweakButton label="Open sample submission"
+          onClick={() => { setOpenSub(data.featuredId); setView("submissions"); }}/>
+        <TweakSection label="Trends visualisation"/>
+        <TweakRadio label="Chart style" value={vizMode}
+          options={[{value:"bars",label:"Bars"},{value:"cloud",label:"Cloud"},{value:"heat",label:"Heat"}]}
+          onChange={(v) => { setVizMode(v); setTweak("vizMode", v); }}/>
+      </TweaksPanel>
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>
