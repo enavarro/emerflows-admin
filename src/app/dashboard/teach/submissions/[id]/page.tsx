@@ -6,7 +6,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { requireAdmin } from '@/lib/auth/require-admin';
 import { getQueryClient } from '@/lib/query-client';
 import { teachKeys } from '@/features/teach/api/queries';
-import { getSubmission } from '@/features/teach/api/service';
+import { getLearner, getSubmission } from '@/features/teach/api/service';
 import { MODULES } from '@/features/teach/constants/modules';
 import { SubmissionViewer } from '@/features/teach/components/submission-viewer';
 import { MarkReviewedButton } from '@/features/teach/components/mark-reviewed-button';
@@ -39,6 +39,16 @@ export default async function SubmissionViewerPage({ params }: SubmissionViewerP
   const submissionDetail = await queryClient.fetchQuery({
     queryKey: teachKeys.submission(id),
     queryFn: () => getSubmission(id)
+  });
+
+  // Sibling-switcher dependency: the learner's submissionsByModule contains
+  // every sibling for the (learner, moduleId) pair. submission-viewer.tsx
+  // reads it via useSuspenseQuery(learnerQueryOptions(...)) and feeds the
+  // switcher's `siblings` prop. fetchQuery here populates the cache so the
+  // client useSuspenseQuery resolves synchronously from HydrationBoundary.
+  await queryClient.fetchQuery({
+    queryKey: teachKeys.learner(submissionDetail.submission.learnerId),
+    queryFn: () => getLearner(submissionDetail.submission.learnerId)
   });
 
   // UI-SPEC §Surface 2/3 page header:
