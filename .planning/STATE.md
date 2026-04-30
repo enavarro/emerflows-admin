@@ -2,10 +2,10 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: verifying
-stopped_at: Completed 03-06-conversation-viewer-and-mark-reviewed-PLAN.md
-last_updated: "2026-04-29T12:43:47.504Z"
-last_activity: 2026-04-29
+status: phase-complete
+stopped_at: Phase 03 gap-closure complete (10/10 plans) — ready for /gsd-verify-work or Phase 04
+last_updated: "2026-04-30T00:00:00.000Z"
+last_activity: 2026-04-30
 progress:
   total_phases: 6
   completed_phases: 3
@@ -25,10 +25,10 @@ See: .planning/PROJECT.md (updated 2026-04-25)
 
 ## Current Position
 
-Phase: 03 (learner-deep-dive-review) — EXECUTING
-Plan: 6 of 6
-Status: Phase complete — ready for verification
-Last activity: 2026-04-29
+Phase: 03 (learner-deep-dive-review) — COMPLETE
+Plan: 10 of 10 (6 originals + 4 gap-closure)
+Status: All gap closures executed and user-verified — ready for /gsd-verify-work or Phase 04
+Last activity: 2026-04-30
 
 Progress: [██▌░░░░░░░] 25% (1 of 4 phases)
 
@@ -86,6 +86,11 @@ Recent decisions affecting current work:
 - [Phase 03]: Plan 03-04: Learner detail RSC route uses fetchQuery (not prefetchQuery) to propagate errors AND pre-resolve learner.name into PageContainer header — same QueryClient is then dehydrated for HydrationBoundary so client useSuspenseQuery resolves synchronously without a second fetch
 - [Phase 03]: Plan 03-05: Submission viewer route + speaking variant. fetchQuery pre-resolution binds learner.name + module label + attempt to PageContainer header (no flash). submission-viewer.tsx is a thin client router branching on submission.type — isolation point for Plan 06's conversation viewer to swap in. Native <audio controls> per D-02 (no waveform). D-10 audio fallback: brand-cream notice replaces audio Card while transcript still renders. Tips fixed-order grouping (pronunciation→delivery), empty groups skipped, entire Card omitted when tips[] empty. Stub-then-replace coordination: ships mark-reviewed-button + submission-viewer-conversation as stubs Plan 06 overwrites in place.
 - [Phase 03]: Plan 03-06: Conversation viewer composes PolishedIntroCallout + Q&A divide-y stack + Exercise Summary; QAPair uses splitAnswer (left-to-right indexOf with cursor) for inline flag highlighting via click-Popover; MarkReviewedButton three states wired via useMutation onSuccess/onError + sonner toasts; D-06 generic instructor label + D-07 instant undo honored. Phase 3 surface complete.
+- [Phase 03]: Plan 03-07: Migration 00013 adds submissions_admin_select FOR SELECT TO authenticated USING is_admin() — closes UAT Test 7 PGRST116 BLOCKER on POST /api/teach/submissions/[id]/review. Applied live via Supabase MCP (project bohqhhpzsgmwsvqryhfw). Mark-reviewed flow returns 200.
+- [Phase 03]: Plan 03-08: git-hygiene — committed pre-existing working-tree fix for "sidebar Teach intermittent" (use-auth.ts getSession + cancelled flag, migration 00012, teach-nav.spec.ts, playwright.config.ts) in two atomic commits. No new application code authored. Playwright regression suite (3 tests) passes.
+- [Phase 03]: Plan 03-09: Sibling submission switcher. After user feedback, refactored from two-button per-type to one-button per-submission (max 4: 2 attempts × 2 types). currentSubmissionId prop replaces currentType; orderSubmissions replaces pickLatestPerType (recordings before conversations, then attempt 1 before 2). Switcher hides only when zero siblings. Route prefetches learnerQueryOptions on the same QueryClient.
+- [Phase 03]: Plan 03-10: Per-page breadcrumbs for teach surfaces. PageContainer pageBreadcrumbs slot, header.tsx hides global Breadcrumbs on /dashboard/teach/* via usePathname, TeachBreadcrumbs server component. Trails wired on cohort detail (2-seg), learner detail (3-seg), submission viewer (4-seg).
+- [Phase 03]: Mark-reviewed cache reactivity gotcha: queries.ts placeholder queryFn (missingPrefetch) silently swallows refetch errors after invalidate, leaving stale cached data on the same page. Pattern is to use setQueryData with the mutation response payload to patch the submission cache (and any active sibling cache like learner detail). MarkReviewedButton subscribes via useQuery({ enabled: false }) with initialSubmission fallback. invalidate-then-refetch only works for cohort-level keys that refetch on next mount.
 
 ### Pending Todos
 
@@ -105,6 +110,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-29T12:43:47.502Z
-Stopped at: Completed 03-06-conversation-viewer-and-mark-reviewed-PLAN.md
+Last session: 2026-04-30
+Stopped at: Phase 03 gap closure complete (10/10) — user-verified
 Resume file: None
