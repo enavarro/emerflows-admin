@@ -1,9 +1,10 @@
 /**
- * Regression test: intra-module sibling-type switcher.
+ * Regression test: intra-module submission switcher.
  *
- * Gap closure for UAT Test 1: when a learner has BOTH a recording and a
- * conversation submission for the same module, the submission viewer must
- * render a switcher that lets the admin flip between them without bouncing
+ * Gap closure for UAT Test 1: when a learner has multiple submissions for
+ * the same module (any combination of types and attempts, max 4 per module:
+ * 2 recordings + 2 conversations), the submission viewer must render a
+ * switcher that lets the admin flip between any sibling without bouncing
  * back to the learner page.
  */
 
@@ -28,19 +29,19 @@ async function signInAsAdmin(page: Page) {
   }
 }
 
-// The teach surfaces use the stretched-link pattern: an <a> with only an
-// sr-only span, expanded to row size via after:absolute after:inset-0.
-// Playwright's actionability check considers such links "not visible"
-// because they have zero rendered area. We extract href and navigate
-// directly instead of clicking.
+// The teach surfaces use the stretched-link pattern (an <a> with only an
+// sr-only span, expanded to row size via after:absolute after:inset-0).
+// Playwright's actionability check considers such links not visible because
+// they have zero rendered area, even though they navigate correctly. We
+// extract href and navigate directly instead of clicking.
 async function gotoLink(page: Page, link: Locator) {
   const href = await link.getAttribute('href');
   if (!href) throw new Error('Link has no href');
   await page.goto(`${BASE}${href}`, { waitUntil: 'networkidle' });
 }
 
-test.describe('Submission viewer sibling-type switcher (gap closure)', () => {
-  test('switcher hidden when only one type exists; visible + functional when both exist', async ({
+test.describe('Submission viewer sibling switcher (gap closure)', () => {
+  test('switcher shows one button per sibling submission and navigates correctly', async ({
     page
   }, testInfo) => {
     await signInAsAdmin(page);
@@ -52,9 +53,8 @@ test.describe('Submission viewer sibling-type switcher (gap closure)', () => {
     await gotoLink(page, springCard);
     await page.waitForURL(/\/dashboard\/teach\/cohorts\/.+$/, { timeout: 10_000 });
 
-    // Open a learner's detail page. Iterate learners so we can find one whose
-    // module cards include both a recording and a conversation submission for
-    // the same module.
+    // Iterate learners to find one whose module cards include a card with
+    // >= 2 submission rows (any combination of types and attempts).
     const learnerLinks = page.getByRole('link', { name: /Open learner/i });
     const learnerCount = await learnerLinks.count();
     if (learnerCount === 0) {
@@ -62,13 +62,13 @@ test.describe('Submission viewer sibling-type switcher (gap closure)', () => {
       return;
     }
 
-    let foundTargetSubmission: { url: string } | null = null;
-
     const learnerHrefs: string[] = [];
     for (let i = 0; i < learnerCount; i++) {
       const href = await learnerLinks.nth(i).getAttribute('href');
       if (href) learnerHrefs.push(href);
     }
+
+    let foundTargetSubmission: { url: string; siblingCount: number } | null = null;
 
     for (const learnerHref of learnerHrefs) {
       await page.goto(`${BASE}${learnerHref}`, { waitUntil: 'networkidle' });
@@ -76,24 +76,21 @@ test.describe('Submission viewer sibling-type switcher (gap closure)', () => {
         timeout: 10_000
       });
 
-      // Find a module card containing BOTH a Recording and a Conversation
-      // submission row (each row renders a Type badge of the corresponding
-      // label inside the card body).
       const cards = page.locator('[data-slot="card"], .rounded-lg.border').filter({
         has: page.getByRole('link', { name: /Open submission/ })
       });
       const cardCount = await cards.count();
       for (let i = 0; i < cardCount; i++) {
         const card = cards.nth(i);
-        const recordingBadgeCount = await card.getByText(/^Recording$/).count();
-        const conversationBadgeCount = await card.getByText(/^Conversation$/).count();
-        if (recordingBadgeCount >= 1 && conversationBadgeCount >= 1) {
-          const firstSubmissionLink = card
-            .getByRole('link', { name: /Open submission/ })
-            .first();
-          const submissionHref = await firstSubmissionLink.getAttribute('href');
+        const rowLinks = card.getByRole('link', { name: /Open submission/ });
+        const rowCount = await rowLinks.count();
+        if (rowCount >= 2) {
+          const submissionHref = await rowLinks.first().getAttribute('href');
           if (submissionHref) {
-            foundTargetSubmission = { url: `${BASE}${submissionHref}` };
+            foundTargetSubmission = {
+              url: `${BASE}${submissionHref}`,
+              siblingCount: rowCount
+            };
             break;
           }
         }
@@ -105,8 +102,8 @@ test.describe('Submission viewer sibling-type switcher (gap closure)', () => {
     if (!foundTargetSubmission) {
       test.skip(
         true,
-        'Fixture precondition: no learner has a module with BOTH a recording and a conversation submission. ' +
-          'Seed a both-types fixture and re-run.'
+        'Fixture precondition: no learner has a module with 2 or more submissions. ' +
+          'Seed at least one module with multiple attempts/types and re-run.'
       );
       return;
     }
@@ -115,76 +112,52 @@ test.describe('Submission viewer sibling-type switcher (gap closure)', () => {
     const firstViewerUrl = page.url();
 
     // Scope all switcher locators to the ToggleGroup (aria-label="Submission
-    // type") so we don't collide with other "Recording" / "Conversation" text
-    // on the page (badges, body headings, etc.).
+    // type") so we don't collide with other text on the page.
     const switcherGroup = page.getByRole('group', { name: 'Submission type' });
     const switcherLabel = page.getByText('Module submissions', { exact: true });
     await expect(switcherLabel).toBeVisible({ timeout: 10_000 });
     await expect(switcherGroup).toBeVisible({ timeout: 5_000 });
 
-    // Inside the switcher: one item is a button (active, inert) and the
-    // other is an <a> (next/link, navigable).
-    const recordingItem = switcherGroup
-      .getByRole('button', { name: /Recording/i })
-      .or(switcherGroup.getByRole('link', { name: /Recording/i }))
-      .first();
-    const conversationItem = switcherGroup
-      .getByRole('button', { name: /Conversation/i })
-      .or(switcherGroup.getByRole('link', { name: /Conversation/i }))
-      .first();
-
-    await expect(recordingItem).toBeVisible({ timeout: 5_000 });
-    await expect(conversationItem).toBeVisible({ timeout: 5_000 });
-
-    // Determine which item is the navigable link by reading href off the
-    // accessible link nodes inside each ToggleGroupItem.
-    const recordingNavHref = await switcherGroup
-      .getByRole('link', { name: /Recording/i })
-      .first()
-      .getAttribute('href')
-      .catch(() => null);
-    const conversationNavHref = await switcherGroup
-      .getByRole('link', { name: /Conversation/i })
-      .first()
-      .getAttribute('href')
-      .catch(() => null);
-
+    // The switcher renders one item per sibling. Active item is a button (inert);
+    // inactive items are next/link <a> elements with an href to the sibling.
+    const navigableLinks = switcherGroup.getByRole('link');
+    const navigableCount = await navigableLinks.count();
     expect(
-      Boolean(recordingNavHref) !== Boolean(conversationNavHref),
-      'Exactly one of Recording/Conversation should be the navigable link'
-    ).toBe(true);
+      navigableCount,
+      'Switcher should expose (siblingCount - 1) navigable items (the active one is inert)'
+    ).toBe(foundTargetSubmission.siblingCount - 1);
 
-    // Navigate to the sibling type via direct goto (avoids any actionability
-    // quirks from Radix ToggleGroupItem + asChild Link composition).
-    const siblingHref = recordingNavHref ?? conversationNavHref;
-    if (!siblingHref) throw new Error('No sibling href on switcher');
+    // Pick the first navigable sibling and follow it.
+    const siblingHref = await navigableLinks.first().getAttribute('href');
+    if (!siblingHref) throw new Error('Switcher link missing href');
     await page.goto(`${BASE}${siblingHref}`, { waitUntil: 'networkidle' });
 
     expect(page.url()).not.toBe(firstViewerUrl);
     expect(page.url()).toContain('/dashboard/teach/submissions/');
 
-    // Switcher still visible after navigation, with the OTHER side now
-    // exposed as the navigable link.
+    // Switcher still visible after navigation, and now the previously-active
+    // submission is one of the navigable links.
     const switcherGroupAfter = page.getByRole('group', { name: 'Submission type' });
     await expect(page.getByText('Module submissions', { exact: true })).toBeVisible({
       timeout: 10_000
     });
     await expect(switcherGroupAfter).toBeVisible({ timeout: 5_000 });
 
-    const recHrefAfter = await switcherGroupAfter
-      .getByRole('link', { name: /Recording/i })
-      .first()
-      .getAttribute('href')
-      .catch(() => null);
-    const convHrefAfter = await switcherGroupAfter
-      .getByRole('link', { name: /Conversation/i })
-      .first()
-      .getAttribute('href')
-      .catch(() => null);
-
-    const flipBackHref = recHrefAfter ?? convHrefAfter;
-    if (!flipBackHref) throw new Error('No flip-back href on switcher');
-    await page.goto(`${BASE}${flipBackHref}`, { waitUntil: 'networkidle' });
+    // The switcher should now expose a link back to the original submission
+    // (its href matches firstViewerUrl's path) — flip back via that link.
+    const navigableLinksAfter = switcherGroupAfter.getByRole('link');
+    const firstViewerPath = new URL(firstViewerUrl).pathname;
+    let foundFlipBack = false;
+    const afterCount = await navigableLinksAfter.count();
+    for (let i = 0; i < afterCount; i++) {
+      const href = await navigableLinksAfter.nth(i).getAttribute('href');
+      if (href === firstViewerPath) {
+        await page.goto(`${BASE}${href}`, { waitUntil: 'networkidle' });
+        foundFlipBack = true;
+        break;
+      }
+    }
+    expect(foundFlipBack, 'Could not find a link back to the original submission').toBe(true);
     expect(page.url()).toBe(firstViewerUrl);
 
     await testInfo.attach('viewer-after-flip-back.png', {

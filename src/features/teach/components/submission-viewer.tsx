@@ -27,7 +27,7 @@ export function SubmissionViewer({ submissionId }: SubmissionViewerProps) {
     <div className='flex flex-col gap-6'>
       <SiblingTypeSwitcher
         siblings={siblings}
-        currentType={detail.submission.type}
+        currentSubmissionId={detail.submission.id}
       />
 
       {/* D-01: branch on submission.type — single body, no tabs. */}
