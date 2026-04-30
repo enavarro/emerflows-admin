@@ -8,6 +8,8 @@ import { getQueryClient } from '@/lib/query-client';
 import { teachKeys } from '@/features/teach/api/queries';
 import { getLearner } from '@/features/teach/api/service';
 import { LearnerDetail } from '@/features/teach/components/learner-detail';
+import { TeachBreadcrumbs } from '@/features/teach/components/teach-breadcrumbs';
+import { humanizeCohortId } from '@/features/teach/lib/format';
 
 export const metadata = {
   title: 'Learner — Teach Admin'
@@ -18,7 +20,7 @@ interface LearnerDetailPageProps {
 }
 
 export default async function LearnerDetailPage({ params }: LearnerDetailPageProps) {
-  const { learnerId } = await params;
+  const { cohort: cohortSlug, learnerId } = await params;
   // Defense-in-depth: layout already gates, but page-level guard is belt-and-suspenders.
   await requireAdmin();
 
@@ -39,10 +41,18 @@ export default async function LearnerDetailPage({ params }: LearnerDetailPagePro
   //   external_id:     supplemental <p> below header (only when non-null)
   const description = `${learnerDetail.learner.cohort} · ${learnerDetail.learner.level ?? '—'}`;
 
+  const cohortLabel = humanizeCohortId(cohortSlug);
+  const breadcrumbItems = [
+    { label: 'Cohorts', href: '/dashboard/teach/cohorts' },
+    { label: cohortLabel, href: `/dashboard/teach/cohorts/${cohortSlug}` },
+    { label: learnerDetail.learner.name }
+  ];
+
   return (
     <PageContainer
       pageTitle={learnerDetail.learner.name}
       pageDescription={description}
+      pageBreadcrumbs={<TeachBreadcrumbs items={breadcrumbItems} />}
     >
       {learnerDetail.learner.externalId && (
         <p className='text-muted-foreground mt-1 font-mono text-xs'>

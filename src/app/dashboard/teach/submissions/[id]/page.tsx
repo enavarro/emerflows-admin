@@ -10,6 +10,8 @@ import { getSubmission } from '@/features/teach/api/service';
 import { MODULES } from '@/features/teach/constants/modules';
 import { SubmissionViewer } from '@/features/teach/components/submission-viewer';
 import { MarkReviewedButton } from '@/features/teach/components/mark-reviewed-button';
+import { TeachBreadcrumbs } from '@/features/teach/components/teach-breadcrumbs';
+import { humanizeCohortId } from '@/features/teach/lib/format';
 
 export const metadata = {
   title: 'Submission — Teach Admin'
@@ -50,10 +52,24 @@ export default async function SubmissionViewerPage({ params }: SubmissionViewerP
   const title = mod?.title ?? '';
   const description = `${code} · ${title} · Attempt ${submissionDetail.submission.attemptNum}`;
 
+  const cohortSlug = submissionDetail.learner.cohort;
+  const cohortLabel = humanizeCohortId(cohortSlug);
+  const moduleSegment = title ? `${code} - ${title}` : code;
+  const breadcrumbItems = [
+    { label: 'Cohorts', href: '/dashboard/teach/cohorts' },
+    { label: cohortLabel, href: `/dashboard/teach/cohorts/${cohortSlug}` },
+    {
+      label: submissionDetail.learner.name,
+      href: `/dashboard/teach/cohorts/${cohortSlug}/learners/${submissionDetail.learner.id}`
+    },
+    { label: moduleSegment }
+  ];
+
   return (
     <PageContainer
       pageTitle={submissionDetail.learner.name}
       pageDescription={description}
+      pageBreadcrumbs={<TeachBreadcrumbs items={breadcrumbItems} />}
       pageHeaderAction={
         <MarkReviewedButton submission={submissionDetail.submission} />
       }

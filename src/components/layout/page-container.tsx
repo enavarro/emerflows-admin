@@ -27,7 +27,8 @@ export default function PageContainer({
   pageTitle,
   pageDescription,
   infoContent,
-  pageHeaderAction
+  pageHeaderAction,
+  pageBreadcrumbs
 }: {
   children: React.ReactNode;
   scrollable?: boolean;
@@ -38,6 +39,7 @@ export default function PageContainer({
   pageDescription?: string;
   infoContent?: InfobarContent;
   pageHeaderAction?: React.ReactNode;
+  pageBreadcrumbs?: React.ReactNode;
 }) {
   if (!access) {
     return (
@@ -53,18 +55,23 @@ export default function PageContainer({
 
   const content = isLoading ? <PageSkeleton /> : children;
 
-  const hasHeader = pageTitle || pageHeaderAction;
+  const hasHeader = pageTitle || pageHeaderAction || pageBreadcrumbs;
 
   const inner = (
     <div className='flex flex-1 flex-col p-4 md:px-6'>
       {hasHeader && (
-        <div className='bg-background sticky top-0 z-10 mb-4 flex items-start justify-between gap-4 pb-4'>
-          <Heading
-            title={pageTitle ?? ''}
-            description={pageDescription ?? ''}
-            infoContent={infoContent}
-          />
-          {pageHeaderAction && <div className='shrink-0'>{pageHeaderAction}</div>}
+        <div className='bg-background sticky top-0 z-10 mb-4 flex flex-col gap-2 pb-4'>
+          {pageBreadcrumbs && <div>{pageBreadcrumbs}</div>}
+          {(pageTitle || pageHeaderAction) && (
+            <div className='flex items-start justify-between gap-4'>
+              <Heading
+                title={pageTitle ?? ''}
+                description={pageDescription ?? ''}
+                infoContent={infoContent}
+              />
+              {pageHeaderAction && <div className='shrink-0'>{pageHeaderAction}</div>}
+            </div>
+          )}
         </div>
       )}
       {content}

@@ -10,6 +10,7 @@ import { getQueryClient } from '@/lib/query-client';
 import { teachKeys } from '@/features/teach/api/queries';
 import { getCohort } from '@/features/teach/api/service';
 import { CohortDetail } from '@/features/teach/components/cohort-detail';
+import { TeachBreadcrumbs } from '@/features/teach/components/teach-breadcrumbs';
 import { humanizeCohortId } from '@/features/teach/lib/format';
 
 export const metadata = {
@@ -54,9 +55,16 @@ export default async function CohortDetailPage({ params }: CohortDetailPageProps
   // title uses humanizeCohortId(cohortId) until the client query resolves —
   // for typical slugs (e.g. `spring-2026`) this matches the resolved
   // `cohort.name` so there is no visible jump.
+  const cohortLabel = humanizeCohortId(cohortId);
+  const breadcrumbItems = [
+    { label: 'Cohorts', href: '/dashboard/teach/cohorts' },
+    { label: cohortLabel }
+  ];
+
   return (
     <PageContainer
-      pageTitle={humanizeCohortId(cohortId)}
+      pageTitle={cohortLabel}
+      pageBreadcrumbs={<TeachBreadcrumbs items={breadcrumbItems} />}
       pageHeaderAction={
         <Button variant='outline' disabled aria-disabled='true' title='Coming soon'>
           <Icons.upload className='mr-1 h-4 w-4' aria-hidden='true' />
