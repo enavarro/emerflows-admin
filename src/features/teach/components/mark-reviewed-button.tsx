@@ -1,19 +1,35 @@
 'use client';
 
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import { Icons } from '@/components/icons';
 import { markReviewedMutation } from '@/features/teach/api/mutations';
+import { submissionQueryOptions } from '@/features/teach/api/queries';
 import type { SubmissionSummary } from '@/features/teach/api/types';
 
 interface MarkReviewedButtonProps {
-  submission: SubmissionSummary;
+  submissionId: string;
+  // Server-resolved snapshot used as initial fallback so the header renders
+  // with no flash before HydrationBoundary populates the singleton cache.
+  initialSubmission: SubmissionSummary;
 }
 
-export function MarkReviewedButton({ submission }: MarkReviewedButtonProps) {
+export function MarkReviewedButton({
+  submissionId,
+  initialSubmission
+}: MarkReviewedButtonProps) {
+  // Subscribe to the submission cache so post-mutation setQueryData updates
+  // trigger a re-render. enabled:false prevents the throwing placeholder
+  // queryFn in queries.ts from running — this hook is purely a cache reader.
+  const { data: detail } = useQuery({
+    ...submissionQueryOptions(submissionId),
+    enabled: false
+  });
+  const submission = detail?.submission ?? initialSubmission;
+
   const mutation = useMutation({
     ...markReviewedMutation,
     onSuccess: (_data, vars) =>

@@ -81,7 +81,10 @@ export default async function SubmissionViewerPage({ params }: SubmissionViewerP
       pageDescription={description}
       pageBreadcrumbs={<TeachBreadcrumbs items={breadcrumbItems} />}
       pageHeaderAction={
-        <MarkReviewedButton submission={submissionDetail.submission} />
+        <MarkReviewedButton
+          submissionId={id}
+          initialSubmission={submissionDetail.submission}
+        />
       }
     >
       <HydrationBoundary state={dehydrate(queryClient)}>
