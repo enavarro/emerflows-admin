@@ -1,8 +1,11 @@
 'use client';
 
+import { useState } from 'react';
+
 import Link from 'next/link';
 import { differenceInDays, format, formatDistanceToNowStrict } from 'date-fns';
 
+import { Icons } from '@/components/icons';
 import {
   Table,
   TableBody,
@@ -13,14 +16,50 @@ import {
 } from '@/components/ui/table';
 import type { CohortDetail } from '@/features/teach/api/types';
 
+type SortCol = 'name' | 'level' | 'externalId' | 'submissions' | 'latestActivity';
+type SortDir = 'asc' | 'desc';
+
 interface LearnersTableProps {
   cohortDetail: CohortDetail;
 }
 
 export function LearnersTable({ cohortDetail }: LearnersTableProps) {
   const cohortId = cohortDetail.cohort.id;
-  // Default sort: name ASC (CONTEXT.md Discretion). toSorted() avoids in-place mutation.
-  const learners = cohortDetail.learners.toSorted((a, b) => a.name.localeCompare(b.name));
+  const [sortCol, setSortCol] = useState<SortCol>('name');
+  const [sortDir, setSortDir] = useState<SortDir>('asc');
+
+  const hasExternalId = cohortDetail.learners.some((l) => l.externalId);
+
+  const learners = [...cohortDetail.learners].sort((a, b) => {
+    let cmp = 0;
+    switch (sortCol) {
+      case 'name':
+        cmp = a.name.localeCompare(b.name);
+        break;
+      case 'level':
+        cmp = (a.level ?? '').localeCompare(b.level ?? '');
+        break;
+      case 'externalId':
+        cmp = (a.externalId ?? '').localeCompare(b.externalId ?? '');
+        break;
+      case 'submissions':
+        cmp = a.submissionCount - b.submissionCount;
+        break;
+      case 'latestActivity':
+        cmp = (a.latestActivityAt ?? '').localeCompare(b.latestActivityAt ?? '');
+        break;
+    }
+    return sortDir === 'asc' ? cmp : -cmp;
+  });
+
+  function handleSort(col: SortCol) {
+    if (col === sortCol) {
+      setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortCol(col);
+      setSortDir('asc');
+    }
+  }
 
   if (learners.length === 0) {
     return (
@@ -42,10 +81,13 @@ export function LearnersTable({ cohortDetail }: LearnersTableProps) {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>Level</TableHead>
-            <TableHead className='text-right tabular-nums'>Submissions</TableHead>
-            <TableHead>Latest activity</TableHead>
+            <SortableHead col='name' label='Name' current={sortCol} dir={sortDir} onSort={handleSort} />
+            <SortableHead col='level' label='Level' current={sortCol} dir={sortDir} onSort={handleSort} />
+            {hasExternalId && (
+              <SortableHead col='externalId' label='ID' current={sortCol} dir={sortDir} onSort={handleSort} />
+            )}
+            <SortableHead col='submissions' label='Submissions' current={sortCol} dir={sortDir} onSort={handleSort} />
+            <SortableHead col='latestActivity' label='Latest activity' current={sortCol} dir={sortDir} onSort={handleSort} />
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -66,9 +108,12 @@ export function LearnersTable({ cohortDetail }: LearnersTableProps) {
                   </Link>
                 </TableCell>
                 <TableCell>{learner.level ?? '—'}</TableCell>
-                <TableCell className='text-right tabular-nums'>
-                  {learner.submissionCount}
-                </TableCell>
+                {hasExternalId && (
+                  <TableCell className='text-muted-foreground text-xs tabular-nums'>
+                    {learner.externalId ?? '—'}
+                  </TableCell>
+                )}
+                <TableCell className='tabular-nums'>{learner.submissionCount}</TableCell>
                 <TableCell>{formatLatestActivity(learner.latestActivityAt)}</TableCell>
               </TableRow>
             );
@@ -76,6 +121,32 @@ export function LearnersTable({ cohortDetail }: LearnersTableProps) {
         </TableBody>
       </Table>
     </div>
+  );
+}
+
+interface SortableHeadProps {
+  col: SortCol;
+  label: string;
+  current: SortCol;
+  dir: SortDir;
+  onSort: (col: SortCol) => void;
+}
+
+function SortableHead({ col, label, current, dir, onSort }: SortableHeadProps) {
+  const active = col === current;
+  const SortIcon = active ? (dir === 'asc' ? Icons.chevronUp : Icons.chevronDown) : Icons.chevronsUpDown;
+
+  return (
+    <TableHead>
+      <button
+        type='button'
+        onClick={() => onSort(col)}
+        className='hover:text-foreground flex cursor-pointer items-center gap-1 select-none'
+      >
+        {label}
+        <SortIcon className={`h-3.5 w-3.5 shrink-0 ${active ? 'opacity-100' : 'opacity-40'}`} />
+      </button>
+    </TableHead>
   );
 }
 
